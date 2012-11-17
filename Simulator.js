@@ -2,7 +2,7 @@ function Simulator(w2hRatio) {
     this.GRAVITY = -.4;
     this.MASS_OF_POINT = 100;
     this.RADIUS_OF_POINT = 1;
-    this.RESTITUTION = 1; //.92
+    this.RESTITUTION = .92;
     this.TOLERANCE = .01;
     this.COLLISIONS = true;
     this.DOWN_GRAVITY = true;

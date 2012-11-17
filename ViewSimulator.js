@@ -45,10 +45,28 @@ function draw() {
 }
 
 function drawBalls() {
-    //Add path drawing next
+    //Add path drawing next 
     for (var i = 0; i < sim.balls.length; i++) {
-        drawBall(sim.balls[i]);        
+        drawPath(sim.paths[i], sim.balls[i].color);
     }
+    for (var i = 0; i < sim.balls.length; i++) {
+        drawBall(sim.balls[i]); 
+    }
+}
+
+function drawPath(path, color) {
+    ctx.beginPath();
+    ctx.strokeStyle = color;
+    
+    for (var i = 0; i < path.length; i++) {
+        var x = Math.round(path[i].x*w2gw);
+        var y = Math.round(HEIGHT-(path[i].y*h2gh));
+        ctx.lineTo(x, y);
+    }
+    
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.closePath();
 }
 
  
@@ -59,7 +77,8 @@ function drawBall(b) {
 	var r_h = (Math.round(b.radius))*h2gh;
 	var x = Math.round((b.pos.x*w2gw)-r_h);
 	var y = Math.round((HEIGHT-(b.pos.y*h2gh))-r_h);
-	
+    r_h = Math.round(r_h);
+
     //This will be used for velocity line drawing later
     //var mag = b.velocity.getMag();
     ctx.arc(x+r_h, y+r_h, r_h,  0, PI2, false);
