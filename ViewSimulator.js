@@ -64,7 +64,7 @@ function drawPath(path, color) {
         ctx.lineTo(x, y);
     }
     
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 2;
     ctx.stroke();
     ctx.closePath();
 }
@@ -83,16 +83,8 @@ function drawBall(b) {
     //var mag = b.velocity.getMag();
     ctx.arc(x+r_h, y+r_h, r_h,  0, PI2, false);
     ctx.fill();
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 2;
     ctx.strokeStyle = "#000";
     ctx.stroke();
     ctx.closePath();
-
-/*ctx.beginPath();
- ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
- ctx.fillStyle = 'green';
- ctx.fill();
- ctx.lineWidth = 5;
- ctx.strokeStyle = '#003300';
- ctx.stroke();*/  
 }
