@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.css" />
 <link rel="stylesheet" type="text/css" href="sim.css"></style>
 </head>
-<body>
+<body id="body" data-role="page">
 <div id="header">
 <h3>David's Physics</h3>
 </div>
@@ -23,7 +23,7 @@ Downward Gravity:
 </select>
 </div>
 <script type="text/javascript">
-$('document').ready(function() {
+$('#body').live('pageinit', function(e) {
     sim_viewer();
 });
 </script>

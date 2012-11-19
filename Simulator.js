@@ -1,5 +1,5 @@
 function Simulator(w2hRatio) {
-    this.GRAVITY = -.4;
+    this.GRAVITY = .4;
     this.MASS_OF_POINT = 100;
     this.RADIUS_OF_POINT = 1;
     this.RESTITUTION = .95;
@@ -11,6 +11,7 @@ function Simulator(w2hRatio) {
     this.DRAW_PATHS = true;
     this.DRAW_HELP = true;
     this.DRAW_FPS = true;
+    this.ACCEL_GRAV = false;
 
     this.delay = 5;
     this.fps = 0;
@@ -24,19 +25,21 @@ function Simulator(w2hRatio) {
 }
 
 Simulator.prototype.changeGravity = function(y, z) {
-    if (y < 0) {
-        y = Math.max(-45, y); 
-    } else {
-        y = Math.min(45, min);
-    }
-    if (z < 0) {
-        z = Math.max(-45, z);
-    } else {
-        z = Math.min(45, z);
-    }
+    if (this.ACCEL_GRAV) {
+        if (y < 0) {
+            y = Math.max(-45, y); 
+        } else {
+            y = Math.min(45, min);
+        }
+        if (z < 0) {
+            z = Math.max(-45, z);
+        } else {
+            z = Math.min(45, z);
+        }
 
-    this.gravity_dir = new Vector(z/45, y/45);
-    this.gravity_dir.normalize();
+        this.gravity_dir = new Vector(z/45, y/45);
+        console.log(this.gravity_dir);
+    }
 }
 
 Simulator.prototype.addBall = function(r, pos, theta, mag, mass, c) {

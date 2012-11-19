@@ -16,7 +16,7 @@ function init() {
     canvas.width = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
     ctx = canvas.getContext("2d");
-   
+
     WIDTH = Math.max(canvas.clientWidth, 800);
     HEIGHT = Math.max(canvas.clientHeight, 600);
     canvas.width = WIDTH;
@@ -28,7 +28,6 @@ function init() {
     initializeSliders(); 
     initializeAccelerometer();
     var intervalId = setInterval(draw, timestep);
-    return intervalId;
 }
 
 function initializeSliders() {
@@ -49,6 +48,7 @@ function initializeAccelerometer() {
             mobile = false;
         } else {
             mobile = true;
+            sim.ACCEL_GRAV = true;
             sim.changeGravity(orig_event.beta, orig_event.gamma);
         }
     });
