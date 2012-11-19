@@ -31,9 +31,11 @@ Simulator.prototype.addBall = function(r, pos, theta, mag, mass, c) {
 Simulator.prototype.update = function(timestep) {
     this.moveBalls(timestep);
     //make sure paths don't get too long
-    for(var i = 0; i < this.paths.length; i++) {
-        if (this.paths[i].length > 100) {
-            this.paths[i].splice(0, this.paths[i].length-100);
+    if (this.LIMIT_PATHS) {
+        for(var i = 0; i < this.paths.length; i++) {
+            if (this.paths[i].length > 100) {
+                this.paths[i].splice(0, this.paths[i].length-100);
+            }
         }
     }
 }
@@ -87,7 +89,11 @@ Simulator.prototype.moveBalls = function(timestep) {
         }
     }
     for (var i = 0; i < this.balls.length; i++) {
-        this.paths[i].push(new Point(this.balls[i].pos.x, this.balls[i].pos.y));
+        if (this.DRAW_PATHS) {
+            this.paths[i].push(new Point(this.balls[i].pos.x, this.balls[i].pos.y));
+        } else {
+            this.paths[i] = [];
+        }
         this.moveBall(this.balls[i], timestep);
     }
 }

@@ -1,28 +1,48 @@
+function sim_viewer() {
+
 var WIDTH = 0;
 var HEIGHT = 0;
 var w2gw = 0;
 var h2gh = 0;
-var timestep = 5;
+var timestep = 15;
+var PI2 = 2*Math.PI;
+var sim;
+var canvas;
+var ctx;
 
 function init() {
-
-    var canvas = document.getElementById('canvas');
+    canvas = document.getElementById('main_canvas');
     canvas.width = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
     ctx = canvas.getContext("2d");
-    
-    WIDTH = canvas.clientWidth;
-    HEIGHT = canvas.clientHeight;
+   
+    WIDTH = Math.max(canvas.clientWidth, 800);
+    HEIGHT = Math.max(canvas.clientHeight, 600);
+    canvas.width = WIDTH;
+    canvas.height = HEIGHT;
     w2gw = HEIGHT/100.0;
     h2gh = HEIGHT/100.0;
-    PI2 = 2*Math.PI;
-    console.log(WIDTH);
-    console.log(HEIGHT);
     sim = new Simulator(WIDTH/HEIGHT);
     addInitialBalls();
-    
+    initializeSliders(); 
     var intervalId = setInterval(draw, timestep);
     return intervalId;
+}
+
+function initializeSliders() {
+    slider = $('#GravityToggle');
+    slider[0].selectedIndex = 1;
+    slider.slider('refresh');
+    slider.on('slidestop', function(event) {
+        sim.DOWN_GRAVITY = slider[0].selectedIndex == 0 ? false : true;
+    });
+
+
+}
+
+function initializeSlider(name, callback) {
+
+
 }
 
 function addInitialBalls() {
@@ -87,4 +107,7 @@ function drawBall(b) {
     ctx.strokeStyle = "#000";
     ctx.stroke();
     ctx.closePath();
+}
+
+init();
 }

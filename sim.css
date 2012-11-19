@@ -7,10 +7,18 @@ body {
     box-shadow:         3px 3px 5px 6px #ccc;
 }
 
-#canvas {
-    position: absolute;
+#canvas_wrapper {
+    text-align: center;
+}
+
+#main_canvas {
+    /* position: absolute; */
     width: 60%;
     height: 75%;
-    display: inline;
+    /* display: inline; */
 
+}
+
+#slider_div {
+    padding: 10px;
 }
