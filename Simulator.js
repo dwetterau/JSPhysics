@@ -24,6 +24,7 @@ function Simulator(w2hRatio) {
 }
 
 Simulator.prototype.changeGravity = function(y, z) {
+    console.log('This is getting called');
     if (y < 0) {
         y = Math.max(-45, y); 
     } else {
@@ -130,7 +131,7 @@ Simulator.prototype.moveBall = function(b, timestep) {
 	}  */ 
     if(none && this.DOWN_GRAVITY){
 	    //grav = new Vector(0,this.GRAVITY);
-		this.gravity_dir.makeMag(this.GRAVITY);
+        this.gravity_dir.makeMag(Math.abs(this.GRAVITY));
         b.velocity.addVector(this.gravity_dir);
 	}
 	if(this.WALL_COLLISIONS) {
