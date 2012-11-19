@@ -18,8 +18,25 @@ function Simulator(w2hRatio) {
     this.balls = [];
     this.gravityPoints =[];
     this.paths = [];
+    this.gravity_dir = new Vector(0,-1);
     this.GRID_WIDTH = Math.round(100*w2hRatio);
     this.GRID_HEIGHT = 100;
+}
+
+Simulator.prototype.changeGravity = function(y, z) {
+    if (y < 0) {
+        y = Math.max(-45, y); 
+    } else {
+        y = Math.min(45, min);
+    }
+    if (z < 0) {
+        z = Math.max(-45, z);
+    } else {
+        z = Math.min(45, z);
+    }
+
+    this.gravity_dir = new Vector(z/45, y/45);
+    this.gravity_dir.normalize();
 }
 
 Simulator.prototype.addBall = function(r, pos, theta, mag, mass, c) {
@@ -112,8 +129,9 @@ Simulator.prototype.moveBall = function(b, timestep) {
 	    b.velocity.addVector(grav);	
 	}  */ 
     if(none && this.DOWN_GRAVITY){
-	    grav = new Vector(0,this.GRAVITY);
-		b.velocity.addVector(grav);
+	    //grav = new Vector(0,this.GRAVITY);
+		this.gravity_dir.makeMag(this.GRAVITY);
+        b.velocity.addVector(this.gravity_dir);
 	}
 	if(this.WALL_COLLISIONS) {
 		this.checkWalls(b);

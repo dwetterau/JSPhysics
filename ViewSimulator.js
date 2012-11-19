@@ -9,6 +9,7 @@ var PI2 = 2*Math.PI;
 var sim;
 var canvas;
 var ctx;
+var mobile = false;
 
 function init() {
     canvas = document.getElementById('main_canvas');
@@ -25,6 +26,7 @@ function init() {
     sim = new Simulator(WIDTH/HEIGHT);
     addInitialBalls();
     initializeSliders(); 
+    initializeAccelerometer();
     var intervalId = setInterval(draw, timestep);
     return intervalId;
 }
@@ -40,9 +42,16 @@ function initializeSliders() {
 
 }
 
-function initializeSlider(name, callback) {
-
-
+function initializeAccelerometer() {
+    $(window).bind("deviceorientation", function(e) {
+        var orig_event = e.originalEvent;
+        if (orig_event.beta == null) {
+            mobile = false;
+        } else {
+            mobile = true;
+            sim.changeGravity(orig_event.beta, orig_event.gamma);
+        }
+    });
 }
 
 function addInitialBalls() {
