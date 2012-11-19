@@ -12,15 +12,26 @@ var ctx;
 var mobile = false;
 
 function init() {
-    canvas = document.getElementById('main_canvas');
-    canvas.width = canvas.clientWidth;
-    canvas.height = canvas.clientHeight;
+    canvas = $('#main_canvas')[0];
+    var body = $('#body')[0];
+    
+    canvas.width = Math.min(800, Math.round(body.clientWidth * .6));
+    canvas.height = Math.min(600, Math.round(body.clientWidth * .75));
     ctx = canvas.getContext("2d");
-
-    WIDTH = Math.max(canvas.clientWidth, 800);
-    HEIGHT = Math.max(canvas.clientHeight, 600);
+  
+    WIDTH = canvas.width;
+    HEIGHT = canvas.height;
+    canvas.style.width = WIDTH+'px';
+    canvas.style.height = HEIGHT+'px';
+    /*WIDTH = Math.max(canvas.clientWidth, 800);
+    HEIGHT = Math.max(600, canvas.clientHeight);
     canvas.width = WIDTH;
-    canvas.height = HEIGHT;
+    canvas.height = HEIGHT;*/
+    /*console.log(WIDTH);
+    console.log(HEIGHT);
+    console.log(canvas.clientWidth);
+    console.log(canvas.clientHeight);
+    console.log(canvas);*/
     w2gw = HEIGHT/100.0;
     h2gh = HEIGHT/100.0;
     sim = new Simulator(WIDTH/HEIGHT);
@@ -71,6 +82,7 @@ function draw() {
     clear();
     sim.update(timestep);
     drawBalls();
+    drawGrav();
 }
 
 function drawBalls() {
@@ -116,6 +128,13 @@ function drawBall(b) {
     ctx.strokeStyle = "#000";
     ctx.stroke();
     ctx.closePath();
+}
+
+function drawGrav() {
+    $('#grav_test').html(
+        'a: '+sim.gravity_dir.a +'<br>'+
+        'b: '+sim.gravity_dir.b +'<br>'
+    );
 }
 
 init();

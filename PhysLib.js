@@ -47,6 +47,10 @@ Vector.prototype.mult = function(n) {
     this.b *= n;
 }
 
+Vector.prototype.scale = function(n) {
+    return new Vector(this.a * n, this.b * n);
+}
+
 function Ball(r, p, theta, mag, mass, color) {
     this.radius = r;
     this.velocity = makeVector(theta, mag);
