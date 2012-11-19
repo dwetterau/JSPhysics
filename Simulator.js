@@ -29,7 +29,7 @@ Simulator.prototype.changeGravity = function(y, z) {
         if (y < 0) {
             y = Math.max(-45, y); 
         } else {
-            y = Math.min(45, min);
+            y = Math.min(45, y);
         }
         if (z < 0) {
             z = Math.max(-45, z);
@@ -37,7 +37,7 @@ Simulator.prototype.changeGravity = function(y, z) {
             z = Math.min(45, z);
         }
 
-        this.gravity_dir = new Vector(z/45, y/45);
+        this.gravity_dir = new Vector(z/45, -y/45);
         console.log(this.gravity_dir);
     }
 }
@@ -132,9 +132,8 @@ Simulator.prototype.moveBall = function(b, timestep) {
 	    b.velocity.addVector(grav);	
 	}  */ 
     if(none && this.DOWN_GRAVITY){
-	    //grav = new Vector(0,this.GRAVITY);
-		this.gravity_dir.makeMag(this.GRAVITY);
-        b.velocity.addVector(this.gravity_dir);
+        var grav = this.gravity_dir.scale(this.GRAVITY);
+        b.velocity.addVector(grav);
 	}
 	if(this.WALL_COLLISIONS) {
 		this.checkWalls(b);
@@ -168,7 +167,6 @@ Simulator.prototype.checkWalls = function(b) {
 		b.velocity.mult(this.RESTITUTION);
 	}
 }
-
 
 Simulator.prototype.distance = function(b1, b2) {
     return Math.sqrt((b1.pos.x-b2.pos.x)*(b1.pos.x-b2.pos.x) + (b1.pos.y-b2.pos.y)*(b1.pos.y-b2.pos.y));
