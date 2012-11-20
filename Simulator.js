@@ -2,7 +2,7 @@ function Simulator(w2hRatio) {
     this.GRAVITY = .4;
     this.MASS_OF_POINT = 100;
     this.RADIUS_OF_POINT = 1;
-    this.RESTITUTION = .95;
+    this.RESTITUTION = .8;//.95;
     this.TOLERANCE = .01;
     this.COLLISIONS = true;
     this.DOWN_GRAVITY = true;
@@ -25,7 +25,7 @@ function Simulator(w2hRatio) {
 }
 
 Simulator.prototype.changeGravity = function(y, z) {
-    if (this.ACCEL_GRAV) {
+   if (this.ACCEL_GRAV) { 
         if (y < 0) {
             y = Math.max(-45, y); 
         } else {
@@ -36,7 +36,6 @@ Simulator.prototype.changeGravity = function(y, z) {
         } else {
             z = Math.min(45, z);
         }
-
         this.gravity_dir = new Vector(z/45, -y/45);
         console.log(this.gravity_dir);
     }

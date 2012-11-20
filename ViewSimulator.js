@@ -4,7 +4,7 @@ var WIDTH = 0;
 var HEIGHT = 0;
 var w2gw = 0;
 var h2gh = 0;
-var timestep = 15;
+var timestep = 5;
 var PI2 = 2*Math.PI;
 var sim;
 var canvas;
@@ -16,7 +16,7 @@ function init() {
     var body = $('#body')[0];
     
     canvas.width = Math.min(800, Math.round(body.clientWidth * .6));
-    canvas.height = Math.min(600, Math.round(body.clientWidth * .75));
+    canvas.height = Math.min(600, Math.round(body.clientHeight * .75));
     ctx = canvas.getContext("2d");
   
     WIDTH = canvas.width;
@@ -79,10 +79,15 @@ function clear() {
 }
 
 function draw() {
+    //var start = -(new Date().getTime());
     clear();
-    sim.update(timestep);
+    //console.log('time to clear: '+((new Date().getTime())+start));
+    //start = -(new Date().getTime());
+    sim.update(timestep); 
+    //console.log('time to update: '+((new Date().getTime())+start));
+    //start = -(new Date().getTime());
     drawBalls();
-    drawGrav();
+    //console.log('drawing ball time: '+((new Date().getTime())+start));
 }
 
 function drawBalls() {
