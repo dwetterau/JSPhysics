@@ -23,15 +23,6 @@ function init() {
     HEIGHT = canvas.height;
     canvas.style.width = WIDTH+'px';
     canvas.style.height = HEIGHT+'px';
-    /*WIDTH = Math.max(canvas.clientWidth, 800);
-    HEIGHT = Math.max(600, canvas.clientHeight);
-    canvas.width = WIDTH;
-    canvas.height = HEIGHT;*/
-    /*console.log(WIDTH);
-    console.log(HEIGHT);
-    console.log(canvas.clientWidth);
-    console.log(canvas.clientHeight);
-    console.log(canvas);*/
     w2gw = HEIGHT/100.0;
     h2gh = HEIGHT/100.0;
     sim = new Simulator(WIDTH/HEIGHT);
@@ -42,14 +33,23 @@ function init() {
 }
 
 function initializeSliders() {
-    slider = $('#GravityToggle');
-    slider[0].selectedIndex = 1;
-    slider.slider('refresh');
-    slider.on('slidestop', function(event) {
-        sim.DOWN_GRAVITY = slider[0].selectedIndex == 0 ? false : true;
+    var slider = $('select#GravityToggle');
+    slider.val('on').slider('refresh');
+    slider.change(function(event) {
+       sim.DOWN_GRAVITY = slider.val() == 'on' ?  true : false; //!sim.DOWN_GRAVITY;
     });
 
+    var slider2 = $('select#PathToggle');
+    slider2.val('on').slider('refresh');
+    slider2.change(function(event) {
+        sim.DRAW_PATHS = slider2.val() == 'on' ? true : false;
+    });
 
+    var slider3 = $('select#LimitToggle');
+    slider3.val('on').slider('refresh');
+    slider3.change(function(event) {
+        sim.LIMIT_PATHS = slider3.val() == 'on' ? true : false;
+    });
 }
 
 function initializeAccelerometer() {
