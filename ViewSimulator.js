@@ -4,7 +4,7 @@ var WIDTH = 0;
 var HEIGHT = 0;
 var w2gw = 0;
 var h2gh = 0;
-var timestep = 15;
+var timestep = 5;
 var PI2 = 2*Math.PI;
 var sim;
 var canvas;
@@ -12,15 +12,25 @@ var ctx;
 var mobile = false;
 
 function init() {
-    canvas = document.getElementById('main_canvas');
-    canvas.width = canvas.clientWidth;
-    canvas.height = canvas.clientHeight;
+    canvas = $('#main_canvas')[0];
+    var body = $('#body')[0];
+    canvas.width = Math.min(800, Math.round(body.clientWidth * .6));
+    canvas.height = Math.min(600, Math.round(body.clientHeight * .75));
     ctx = canvas.getContext("2d");
-   
-    WIDTH = Math.max(canvas.clientWidth, 800);
-    HEIGHT = Math.max(canvas.clientHeight, 600);
+  
+    WIDTH = canvas.width;
+    HEIGHT = canvas.height;
+    canvas.style.width = WIDTH+'px';
+    canvas.style.height = HEIGHT+'px';
+    /*WIDTH = Math.max(canvas.clientWidth, 800);
+    HEIGHT = Math.max(600, canvas.clientHeight);
     canvas.width = WIDTH;
-    canvas.height = HEIGHT;
+    canvas.height = HEIGHT;*/
+    /*console.log(WIDTH);
+    console.log(HEIGHT);
+    console.log(canvas.clientWidth);
+    console.log(canvas.clientHeight);
+    console.log(canvas);*/
     w2gw = HEIGHT/100.0;
     h2gh = HEIGHT/100.0;
     sim = new Simulator(WIDTH/HEIGHT);
@@ -28,7 +38,6 @@ function init() {
     initializeSliders(); 
     initializeAccelerometer();
     var intervalId = setInterval(draw, timestep);
-    return intervalId;
 }
 
 function initializeSliders() {
@@ -49,6 +58,7 @@ function initializeAccelerometer() {
             mobile = false;
         } else {
             mobile = true;
+            sim.ACCEL_GRAV = true;
             sim.changeGravity(orig_event.beta, orig_event.gamma);
         }
     });
@@ -68,9 +78,15 @@ function clear() {
 }
 
 function draw() {
+    var start = -(new Date().getTime());
     clear();
-    sim.update(timestep);
+    console.log('time to clear: '+((new Date().getTime())+start));
+    start = -(new Date().getTime());
+    sim.update(timestep); 
+    console.log('time to update: '+((new Date().getTime())+start));
+    start = -(new Date().getTime());
     drawBalls();
+    console.log('drawing ball time: '+((new Date().getTime())+start));
 }
 
 function drawBalls() {
@@ -116,6 +132,13 @@ function drawBall(b) {
     ctx.strokeStyle = "#000";
     ctx.stroke();
     ctx.closePath();
+}
+
+function drawGrav() {
+    $('#grav_test').html(
+        'a: '+sim.gravity_dir.a +'<br>'+
+        'b: '+sim.gravity_dir.b +'<br>'
+    );
 }
 
 init();

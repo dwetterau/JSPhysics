@@ -1,8 +1,8 @@
 function Simulator(w2hRatio) {
-    this.GRAVITY = -.4;
+    this.GRAVITY = .4;
     this.MASS_OF_POINT = 100;
     this.RADIUS_OF_POINT = 1;
-    this.RESTITUTION = .95;
+    this.RESTITUTION = .8;//.95;
     this.TOLERANCE = .01;
     this.COLLISIONS = true;
     this.DOWN_GRAVITY = true;
@@ -11,6 +11,7 @@ function Simulator(w2hRatio) {
     this.DRAW_PATHS = true;
     this.DRAW_HELP = true;
     this.DRAW_FPS = true;
+    this.ACCEL_GRAV = false;
 
     this.delay = 5;
     this.fps = 0;
@@ -24,20 +25,20 @@ function Simulator(w2hRatio) {
 }
 
 Simulator.prototype.changeGravity = function(y, z) {
-    console.log('This is getting called');
-    if (y < 0) {
-        y = Math.max(-45, y); 
-    } else {
-        y = Math.min(45, min);
+   if (this.ACCEL_GRAV) { 
+        if (y < 0) {
+            y = Math.max(-45, y); 
+        } else {
+            y = Math.min(45, min);
+        }
+        if (z < 0) {
+            z = Math.max(-45, z);
+        } else {
+            z = Math.min(45, z);
+        }
+            this.gravity_dir = new Vector(z/45, -y/45);
+        console.log(this.gravity_dir);
     }
-    if (z < 0) {
-        z = Math.max(-45, z);
-    } else {
-        z = Math.min(45, z);
-    }
-
-    this.gravity_dir = new Vector(z/45, y/45);
-    this.gravity_dir.normalize();
 }
 
 Simulator.prototype.addBall = function(r, pos, theta, mag, mass, c) {
@@ -131,8 +132,8 @@ Simulator.prototype.moveBall = function(b, timestep) {
 	}  */ 
     if(none && this.DOWN_GRAVITY){
 	    //grav = new Vector(0,this.GRAVITY);
-        this.gravity_dir.makeMag(Math.abs(this.GRAVITY));
-        b.velocity.addVector(this.gravity_dir);
+        var grav = this.gravity_dir.scale(this.GRAVITY);
+        b.velocity.addVector(grav);
 	}
 	if(this.WALL_COLLISIONS) {
 		this.checkWalls(b);
@@ -166,7 +167,6 @@ Simulator.prototype.checkWalls = function(b) {
 		b.velocity.mult(this.RESTITUTION);
 	}
 }
-
 
 Simulator.prototype.distance = function(b1, b2) {
     return Math.sqrt((b1.pos.x-b2.pos.x)*(b1.pos.x-b2.pos.x) + (b1.pos.y-b2.pos.y)*(b1.pos.y-b2.pos.y));
