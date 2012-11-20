@@ -131,7 +131,8 @@ Simulator.prototype.moveBall = function(b, timestep) {
 	    b.velocity.addVector(grav);	
 	}  */ 
     if(none && this.DOWN_GRAVITY){
-        var grav = this.gravity_dir.scale(this.GRAVITY);
+        var mag = this.ACCEL_GRAV ? this.GRAVITY*4: this.GRAVITY;
+        var grav = this.gravity_dir.scale(mag);
         b.velocity.addVector(grav);
 	}
 	if(this.WALL_COLLISIONS) {
