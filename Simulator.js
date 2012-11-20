@@ -47,6 +47,31 @@ Simulator.prototype.addBall = function(r, pos, theta, mag, mass, c) {
     this.paths.push(newPath);
 }
 
+Simulator.prototype.spawnBall = function(r, mag, mass, c) {
+    var maxTries = 1000;
+    var dir = Math.random()*2*Math.PI;
+    var b, i;
+    all:
+    for (i = 0; i < maxTries; i++) {
+        var x = r + (this.GRID_WIDTH-2*r)*Math.random();
+        var y = r + (this.GRID_HEIGHT-2*r)*Math.random();
+        b = new Ball(r, new Point(x, y), dir, mag, mass, c);
+        for (var j = 0; j < this.balls.length; j++) {
+            if (!this.areColliding(b, this.balls[j])) {
+                break all;    
+            }
+        }
+    }
+    if (i < 1000) {
+        this.addBall(r, b.pos, dir, mag, mass, c);
+    }
+}
+
+Simulator.prototype.removeBall = function() {
+    this.balls.pop();
+    this.paths.pop();
+}
+
 Simulator.prototype.update = function(timestep) {
     this.moveBalls(timestep);
     //make sure paths don't get too long
@@ -173,6 +198,9 @@ Simulator.prototype.distance = function(b1, b2) {
 }
 
 Simulator.prototype.areColliding = function(b1, b2) {
+    if (!this.COLLISIONS) {
+        return false;
+    }
     d = this.distance(b1,b2);
     return d <= b1.radius + b2.radius;
 }

@@ -16,7 +16,7 @@ function init() {
     var body = $('#body')[0];
     
     canvas.width = Math.min(800, Math.round(body.clientWidth * .6));
-    canvas.height = Math.min(600, Math.round(body.clientHeight * .75));
+    canvas.height = Math.min(600, Math.round(body.clientHeight * .6));
     ctx = canvas.getContext("2d");
   
     WIDTH = canvas.width;
@@ -29,14 +29,36 @@ function init() {
     addInitialBalls();
     initializeSliders(); 
     initializeAccelerometer();
+    initializeButtons();
     var intervalId = setInterval(draw, timestep);
+}
+
+function initializeButtons() {
+    var button1 = $('a#addBall');
+    button1.click(function(event) {
+         sim.spawnBall(5, 20, 5, get_random_color());
+    });
+    
+    var button2 = $('a#removeBall');
+    button2.click(function(event) {
+        sim.removeBall();
+    });
+}
+
+function get_random_color() {
+    var letters = '0123456789ABCDEF'.split('');
+    var color = '#';
+    for (var i = 0; i < 6; i++ ) {
+        color += letters[Math.round(Math.random() * 15)];
+    }
+    return color;
 }
 
 function initializeSliders() {
     var slider = $('select#GravityToggle');
     slider.val('on').slider('refresh');
     slider.change(function(event) {
-       sim.DOWN_GRAVITY = slider.val() == 'on' ?  true : false; //!sim.DOWN_GRAVITY;
+       sim.DOWN_GRAVITY = slider.val() == 'on' ?  true : false; 
     });
 
     var slider2 = $('select#PathToggle');
