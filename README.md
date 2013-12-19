@@ -2,4 +2,4 @@ JSPhysics
 =========
 
 Legacy Project:
-HTML5 canvas based 2d ball simulation with reallistic collisions.
+HTML5 canvas based 2d ball simulation with realistic collisions.
