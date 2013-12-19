@@ -16,12 +16,34 @@
 <canvas class="shadow" id="main_canvas">Sorry you need a better browser to use this.</canvas>
 </div>
 <div id="slider_div">
-Downward Gravity:
-<select id="GravityToggle" data-role="slider">
+<table border='0'>
+<tr>
+<td>Downward Gravity: </td>
+<td><select id="GravityToggle" data-role="slider">
     <option value="off">Off</option>
     <option value="on">On</option>
-</select>
-<div id="grav_test"></div>
+</select></td>
+<td>(Note: This will use the accelerometer on mobile devices!)</td>
+</tr><tr>
+<td>Draw Paths:</td>
+<td>
+<select id="PathToggle" data-role="slider">
+    <option value="off">Off</option>
+    <option value="on">On</option>
+</select></td>
+</tr><tr>
+<td>Limit Paths:</td>
+<td><select id="LimitToggle" data-role="slider">
+    <option value="off">Off</option>
+    <option value="on">On</option>
+</select></td>
+<td>(Note: This will cause massive slowdowns)</td>
+</tr>
+</table>
+</div>
+<div id="buttons">
+<a id="addBall" data-inline="true" data-role="button" data-icon="plus" >Add Ball</a>
+<a id="removeBall" data-inline="true" data-role="button" data-icon="minus">Delete Ball</a>
 </div>
 <script type="text/javascript">
 $('#body').live('pageinit', function(e) {

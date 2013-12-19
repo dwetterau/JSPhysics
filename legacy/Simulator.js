@@ -2,7 +2,7 @@ function Simulator(w2hRatio) {
     this.GRAVITY = .4;
     this.MASS_OF_POINT = 100;
     this.RADIUS_OF_POINT = 1;
-    this.RESTITUTION = .95;
+    this.RESTITUTION = .8;//.95;
     this.TOLERANCE = .01;
     this.COLLISIONS = true;
     this.DOWN_GRAVITY = true;
@@ -25,7 +25,7 @@ function Simulator(w2hRatio) {
 }
 
 Simulator.prototype.changeGravity = function(y, z) {
-    if (this.ACCEL_GRAV) {
+   if (this.ACCEL_GRAV) { 
         if (y < 0) {
             y = Math.max(-45, y); 
         } else {
@@ -36,7 +36,6 @@ Simulator.prototype.changeGravity = function(y, z) {
         } else {
             z = Math.min(45, z);
         }
-
         this.gravity_dir = new Vector(z/45, -y/45);
         console.log(this.gravity_dir);
     }
@@ -46,6 +45,31 @@ Simulator.prototype.addBall = function(r, pos, theta, mag, mass, c) {
     this.balls.push(new Ball(r, pos, theta, mag, mass, c));
     var newPath = [];
     this.paths.push(newPath);
+}
+
+Simulator.prototype.spawnBall = function(r, mag, mass, c) {
+    var maxTries = 1000;
+    var dir = Math.random()*2*Math.PI;
+    var b, i;
+    all:
+    for (i = 0; i < maxTries; i++) {
+        var x = r + (this.GRID_WIDTH-2*r)*Math.random();
+        var y = r + (this.GRID_HEIGHT-2*r)*Math.random();
+        b = new Ball(r, new Point(x, y), dir, mag, mass, c);
+        for (var j = 0; j < this.balls.length; j++) {
+            if (!this.areColliding(b, this.balls[j])) {
+                break all;    
+            }
+        }
+    }
+    if (i < 1000) {
+        this.addBall(r, b.pos, dir, mag, mass, c);
+    }
+}
+
+Simulator.prototype.removeBall = function() {
+    this.balls.pop();
+    this.paths.pop();
 }
 
 Simulator.prototype.update = function(timestep) {
@@ -132,7 +156,8 @@ Simulator.prototype.moveBall = function(b, timestep) {
 	    b.velocity.addVector(grav);	
 	}  */ 
     if(none && this.DOWN_GRAVITY){
-        var grav = this.gravity_dir.scale(this.GRAVITY);
+        var mag = this.ACCEL_GRAV ? this.GRAVITY*4: this.GRAVITY;
+        var grav = this.gravity_dir.scale(mag);
         b.velocity.addVector(grav);
 	}
 	if(this.WALL_COLLISIONS) {
@@ -173,6 +198,9 @@ Simulator.prototype.distance = function(b1, b2) {
 }
 
 Simulator.prototype.areColliding = function(b1, b2) {
+    if (!this.COLLISIONS) {
+        return false;
+    }
     d = this.distance(b1,b2);
     return d <= b1.radius + b2.radius;
 }

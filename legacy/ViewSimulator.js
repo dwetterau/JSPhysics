@@ -4,7 +4,7 @@ var WIDTH = 0;
 var HEIGHT = 0;
 var w2gw = 0;
 var h2gh = 0;
-var timestep = 15;
+var timestep = 5;
 var PI2 = 2*Math.PI;
 var sim;
 var canvas;
@@ -16,40 +16,62 @@ function init() {
     var body = $('#body')[0];
     
     canvas.width = Math.min(800, Math.round(body.clientWidth * .6));
-    canvas.height = Math.min(600, Math.round(body.clientWidth * .75));
+    canvas.height = Math.min(600, Math.round(body.clientHeight * .6));
     ctx = canvas.getContext("2d");
   
     WIDTH = canvas.width;
     HEIGHT = canvas.height;
     canvas.style.width = WIDTH+'px';
     canvas.style.height = HEIGHT+'px';
-    /*WIDTH = Math.max(canvas.clientWidth, 800);
-    HEIGHT = Math.max(600, canvas.clientHeight);
-    canvas.width = WIDTH;
-    canvas.height = HEIGHT;*/
-    /*console.log(WIDTH);
-    console.log(HEIGHT);
-    console.log(canvas.clientWidth);
-    console.log(canvas.clientHeight);
-    console.log(canvas);*/
     w2gw = HEIGHT/100.0;
     h2gh = HEIGHT/100.0;
     sim = new Simulator(WIDTH/HEIGHT);
     addInitialBalls();
     initializeSliders(); 
     initializeAccelerometer();
+    initializeButtons();
     var intervalId = setInterval(draw, timestep);
 }
 
+function initializeButtons() {
+    var button1 = $('a#addBall');
+    button1.click(function(event) {
+         sim.spawnBall(5, 20, 5, get_random_color());
+    });
+    
+    var button2 = $('a#removeBall');
+    button2.click(function(event) {
+        sim.removeBall();
+    });
+}
+
+function get_random_color() {
+    var letters = '0123456789ABCDEF'.split('');
+    var color = '#';
+    for (var i = 0; i < 6; i++ ) {
+        color += letters[Math.round(Math.random() * 15)];
+    }
+    return color;
+}
+
 function initializeSliders() {
-    slider = $('#GravityToggle');
-    slider[0].selectedIndex = 1;
-    slider.slider('refresh');
-    slider.on('slidestop', function(event) {
-        sim.DOWN_GRAVITY = slider[0].selectedIndex == 0 ? false : true;
+    var slider = $('select#GravityToggle');
+    slider.val('on').slider('refresh');
+    slider.change(function(event) {
+       sim.DOWN_GRAVITY = slider.val() == 'on' ?  true : false; 
     });
 
+    var slider2 = $('select#PathToggle');
+    slider2.val('on').slider('refresh');
+    slider2.change(function(event) {
+        sim.DRAW_PATHS = slider2.val() == 'on' ? true : false;
+    });
 
+    var slider3 = $('select#LimitToggle');
+    slider3.val('on').slider('refresh');
+    slider3.change(function(event) {
+        sim.LIMIT_PATHS = slider3.val() == 'on' ? true : false;
+    });
 }
 
 function initializeAccelerometer() {
@@ -79,10 +101,15 @@ function clear() {
 }
 
 function draw() {
+    //var start = -(new Date().getTime());
     clear();
-    sim.update(timestep);
+    //console.log('time to clear: '+((new Date().getTime())+start));
+    //start = -(new Date().getTime());
+    sim.update(timestep); 
+    //console.log('time to update: '+((new Date().getTime())+start));
+    //start = -(new Date().getTime());
     drawBalls();
-    drawGrav();
+    //console.log('drawing ball time: '+((new Date().getTime())+start));
 }
 
 function drawBalls() {
