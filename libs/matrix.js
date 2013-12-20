@@ -10,6 +10,17 @@ Matrix3.prototype.multiplyVector = function(v) {
       v.x * this.data[6] + v.y * this.data[7] + v.z * this.data[8]);
 };
 
+Matrix3.prototype.multiplyVectorInverse = function(v) {
+  var tmp = new Vector3(v.x, v.y, v.z);
+  tmp.x -= this.data[3];
+  tmp.y -= this.data[7];
+  tmp.z -= this.data[11];
+  return new Vector3(
+      tmp.x * this.data[0] + tmp.y * this.data[4] + tmp.z * this.data[8],
+      tmp.x * this.data[1] + tmp.y * this.data[5] + tmp.z * this.data[9],
+      tmp.x * this.data[2] + tmp.y * this.data[6] + tmp.z * this.data[10]);
+};
+
 Matrix3.prototype.multiplyMatrix = function(mat) {
   return new Matrix3([
       this.data[0] * mat.data[0] + this.data[1] * mat.data[3] + this.data[2] * mat.data[6],
@@ -106,6 +117,18 @@ Matrix3.prototype.transpose = function() {
   return mat;
 };
 
+Matrix3.prototype.setOrientation = function(q) {
+  this.data[0] = 1 - (2 * q.j * q.j + 2 * q.k * q.k);
+  this.data[1] = (2 * q.i * q.j + 2 * q.k * q.r);
+  this.data[2] = (2 * q.i * q.k - 2 * q.j * q.r);
+  this.data[3] = (2 * q.i * q.j - 2 * q.k * q.r);
+  this.data[4] = 1 - (2 * q.i * q.i + 2 * q.k * q.k);
+  this.data[5] = (2 * q.j * q.k + 2 * q.i * q.r);
+  this.data[6] = (2 * q.i * q.k + 2 * q.j * q.r);
+  this.data[7] = (2 * q.j * q.k - 2 * q.i * q.r);
+  this.data[8] = 1 - (2 * q.i * q.i + 2 * q.j * q.j);
+};
+
 function Matrix4(data) {
   // Copy input matrix data array (3 x 3)
   this.data = data.slice(0);
@@ -116,6 +139,20 @@ Matrix4.prototype.multiplyVector = function(v) {
       v.x * this.data[0] + v.y * this.data[1] + v.z * this.data[2] + this.data[3],
       v.x * this.data[4] + v.y * this.data[5] + v.z * this.data[6] + this.data[7],
       v.x * this.data[8] + v.y * this.data[9] + v.z * this.data[10] + this.data[11]);
+};
+
+Matrix4.prototype.multiplyVector = function(v) {
+  return new Vector3(
+      v.x * this.data[0] + v.y * this.data[1] + v.z * this.data[2],
+      v.x * this.data[4] + v.y * this.data[5] + v.z * this.data[6],
+      v.x * this.data[8] + v.y * this.data[9] + v.z * this.data[10]);
+};
+
+Matrix4.prototype.multiplyVectorInverse = function(v) {
+  return new Vector3(
+    v.x * this.data[0] + v.y * this.data[4] + v.z * this.data[8],
+    v.x * this.data[1] + v.y * this.data[5] + v.z * this.data[9],
+    v.x * this.data[2] + v.y * this.data[6] + v.z * this.data[10]);
 };
 
 Matrix4.prototype.multiplyMatrix = function(mat) {
@@ -198,3 +235,19 @@ Matrix4.prototype.invert = function() {
   this.setInverse(this.data.splice(0));
 };
 
+Matrix4.prototype.setOrientationAndPos = function(q, v) {
+  this.data[0] = 1 - (2 * q.j * q.j + 2 * q.k * q.k);
+  this.data[1] = (2 * q.i * q.j + 2 * q.k * q.r);
+  this.data[2] = (2 * q.i * q.k - 2 * q.j * q.r);
+  this.data[3] = v.x;
+
+  this.data[4] = (2 * q.i * q.j - 2 * q.k * q.r);
+  this.data[5] = 1 - (2 * q.i * q.i + 2 * q.k * q.k);
+  this.data[6] = (2 * q.j * q.k + 2 * q.i * q.r);
+  this.data[7] = v.y;
+
+  this.data[8] = (2 * q.i * q.k + 2 * q.j * q.r);
+  this.data[9] = (2 * q.j * q.k - 2 * q.i * q.r);
+  this.data[10] = 1 - (2 * q.i * q.i + 2 * q.j * q.j);
+  this.data[11] = v.z;
+};
