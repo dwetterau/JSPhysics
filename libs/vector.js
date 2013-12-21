@@ -81,3 +81,9 @@ Vector3.prototype.cross = function(v) {
       this.z * v.x - this.x * v.z,
       this.x * v.y - this.y * v.x);
 };
+
+Vector3.prototype.clear = function() {
+  this.x = 0;
+  this.y = 0;
+  this.z = 0;
+};

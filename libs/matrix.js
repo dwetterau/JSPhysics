@@ -141,14 +141,14 @@ Matrix4.prototype.multiplyVector = function(v) {
       v.x * this.data[8] + v.y * this.data[9] + v.z * this.data[10] + this.data[11]);
 };
 
-Matrix4.prototype.multiplyVector = function(v) {
+Matrix4.prototype.multiplyVectorDirection = function(v) {
   return new Vector3(
       v.x * this.data[0] + v.y * this.data[1] + v.z * this.data[2],
       v.x * this.data[4] + v.y * this.data[5] + v.z * this.data[6],
       v.x * this.data[8] + v.y * this.data[9] + v.z * this.data[10]);
 };
 
-Matrix4.prototype.multiplyVectorInverse = function(v) {
+Matrix4.prototype.multiplyVectorInverseDirection = function(v) {
   return new Vector3(
     v.x * this.data[0] + v.y * this.data[4] + v.z * this.data[8],
     v.x * this.data[1] + v.y * this.data[5] + v.z * this.data[9],

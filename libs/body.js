@@ -1,10 +1,13 @@
-function Body(inverseMass, linearDamping, position, orientation, velocity, rotation) {
+function Body(inverseMass, linearDamping, angularDamping, position, orientation, velocity, rotation) {
   this.inverseMass = inverseMass;
   this.linearDamping = linearDamping;
+  this.angularDamping = angularDamping;
   this.position = position;
   this.orientation = orientation;
   this.velocity = velocity;
   this.rotation = rotation;
+  this.forceAccumulator = new Vector3(0, 0, 0);
+  this.torqueAccumulator = new Vector3(0, 0, 0);
 
   // Set up derived values
   this.transformMatrix = new Matrix4(new Array(12));
@@ -102,3 +105,94 @@ Body.prototype.transformInertiaTensor = function() {
     t57 * this.transformMatrix.data[9] +
     t62 * this.transformMatrix.data[10];
 };
+
+/**
+ * Converts a point from local to world space
+ * @param p the point the convert
+ */
+Body.prototype.getPointInWorldSpace = function(p) {
+  return this.transformMatrix.multiplyVector(p);
+};
+
+/**
+ * Converts a point in world space to local space
+ * @param p the point in world space
+ */
+Body.prototype.getPointInBodySpace = function(p) {
+  var inverseTransform = new Matrix4(new Array(12));
+  inverseTransform.setInverse(this.transformMatrix);
+  return inverseTransform.multiplyVector(p);
+};
+
+/**
+ * Add a force to the body through the center of mass
+ * @param v
+ */
+Body.prototype.addForce = function(v) {
+  this.forceAccumulator.add(v);
+  this.isAwake = true;
+};
+
+/**
+ * Add a force to the body through a point in body coordinate space
+ * @param v vector in world space
+ * @param p point in body space
+ */
+Body.prototype.addForceAtBodyPoint = function(v, p) {
+  var pointInWorld = this.getPointInWorldSpace(p);
+  this.addForceAtPoint(v, pointInWorld);
+
+  this.isAwake = true;
+};
+
+/**
+ * Add a force at a point in world space on the body
+ * @param v vector in world space
+ * @param p point in world space
+ */
+Body.prototype.addForceAtPoint = function(v, p) {
+  var pt = new Vector3(p.x, p.y, p.z);
+  pt.subInPlace(this.position);
+
+  this.forceAccumulator.add(v);
+  this.torqueAccumulator.add(pt.cross(v));
+};
+
+/**
+ * Zeros out the torques and forces after each integration step
+ */
+Body.prototype.clearAccumulators = function() {
+  this.forceAccumulator.clear();
+  this.torqueAccumulator.clear();
+};
+
+/**
+ * Function that moves the body according to the forces accumulated
+ * @param dt the change in time to integrate over
+ */
+Body.prototype.integrate = function(dt) {
+  var acceleration = new Vector3(0, 0, 0);
+  acceleration.addScaledVector(this.forceAccumulator, this.inverseMass);
+  var angularAcceleration = this.inverseInertiaTensorWorld.multiplyVector(this.torqueAccumulator);
+
+  this.velocity.scaleInPlace(Math.pow(this.linearDamping, dt));
+  this.rotation.scaleInPlace(Math.pow(this.angularDamping, dt));
+
+  this.velocity.addScaledVector(acceleration, dt);
+  this.rotation.addScaledVector(angularAcceleration, dt);
+
+  this.position.addScaledVector(this.velocity, dt);
+  this.orientation.addScaledVector(this.rotation, dt);
+
+  this.calculateDerivedData();
+  this.clearAccumulators();
+};
+
+Body.prototype.hasFiniteMass = function() {
+  return this.inverseMass > 0;
+};
+
+Body.prototype.getMass = function() {
+  return 1 / this.inverseMass;
+};
+
