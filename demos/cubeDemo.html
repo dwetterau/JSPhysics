@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <style>
+        body {
+            margin: 0px;
+            padding: 0px;
+        }
+    </style>
+</head>
+<body>
+<div id="container"></div>
+<script src="../deps/three.min.js"></script>
+<script src="../libs/body.js"></script>
+<script src="../libs/force.js"></script>
+<script src="../libs/matrix.js"></script>
+<script src="../libs/quaternion.js"></script>
+<script src="../libs/vector.js"></script>
+<script src="../libs/world.js"></script>
+
+<script defer="defer">
+    var lastTime = (new Date()).getTime();
+
+    // this function is executed on each animation frame
+    function animate(){
+        // update
+        var dt = (new Date()).getTime() - lastTime;
+        lastTime += dt;
+
+        // render
+        world.runPhysics(10);
+        world.render();
+
+        // request new frame
+        requestAnimationFrame(function() {
+            setTimeout(function() {
+                animate();
+            }, 10);
+        });
+    }
+    var world = new World();
+
+    // renderer
+    var renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // camera
+    world.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
+    world.camera.position.z = 500;
+
+    world.addCube(200, 200, 200, new Vector3(0, 0, 0));
+
+    // hack to make the cube rotate
+    world.bodies[1].angularDamping = 1;
+    world.bodies[1].rotation = new Vector3(.001, -.001, .001);
+
+    // add subtle ambient lighting
+    var ambientLight = new THREE.AmbientLight(0x000044);
+    world.scene.add(ambientLight);
+
+    // directional lighting
+    var directionalLight = new THREE.DirectionalLight(0xffffff);
+    directionalLight.position.set(1, 1, 1).normalize();
+    world.scene.add(directionalLight);
+
+    // start animation
+    animate();
+</script>
+</body>
+</html>

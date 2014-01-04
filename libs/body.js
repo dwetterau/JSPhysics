@@ -1,3 +1,60 @@
+function BodyBuilder() {
+  this.inverseMass = 1;
+  this.linearDamping = .999999;
+  this.angularDamping = .999999;
+  this.position = new Vector3(0, 0, 0);
+  this.orientation = new Quaternion(1, 0, 0, 0);
+  this.velocity = new Vector3(0, 0, 0);
+  this.rotation = new Vector3(0, 0, 0);
+}
+
+BodyBuilder.prototype.setInverseMass = function(inverseMass) {
+  this.inverseMass = inverseMass;
+  return this;
+};
+
+BodyBuilder.prototype.setLinearDamping = function(linearDamping) {
+  this.linearDamping = linearDamping;
+  return this;
+};
+
+BodyBuilder.prototype.setAngularDamping = function(angularDamping) {
+  this.angularDamping = angularDamping;
+  return this;
+};
+
+BodyBuilder.prototype.setPosition = function(position) {
+  this.position = position;
+  return this;
+};
+
+BodyBuilder.prototype.setOrientation = function(orientation) {
+  this.orientation = orientation;
+  return this;
+};
+
+BodyBuilder.prototype.setVelocity = function(velocity) {
+  this.velocity = velocity;
+  return this;
+};
+
+BodyBuilder.prototype.setRotation = function(rotation) {
+  this.rotation = rotation;
+  return this;
+};
+
+BodyBuilder.prototype.build = function() {
+  return new Body(
+    this.inverseMass,
+    this.linearDamping,
+    this.angularDamping,
+    this.position,
+    this.orientation,
+    this.velocity,
+    this.rotation
+  );
+};
+
 function Body(inverseMass, linearDamping, angularDamping, position, orientation, velocity, rotation) {
   this.inverseMass = inverseMass;
   this.linearDamping = linearDamping;
@@ -13,7 +70,6 @@ function Body(inverseMass, linearDamping, angularDamping, position, orientation,
   this.transformMatrix = new Matrix4(new Array(12));
   this.inverseInertiaTensor = new Matrix3(new Array(9));
   this.inverseInertiaTensorWorld = new Matrix3(new Array(9));
-  this.calculateDerivedData();
 }
 
 Body.prototype.setInertiaTensor = function(mat) {
@@ -185,6 +241,7 @@ Body.prototype.integrate = function(dt) {
   this.orientation.addScaledVector(this.rotation, dt);
 
   this.calculateDerivedData();
+  this.updateSceneObject();
   this.clearAccumulators();
 };
 
@@ -196,3 +253,15 @@ Body.prototype.getMass = function() {
   return 1 / this.inverseMass;
 };
 
+Body.prototype.setObject = function(sceneObject) {
+  this.sceneObject = sceneObject;
+};
+
+Body.prototype.updateSceneObject = function() {
+  this.sceneObject.updateMatrix();
+  this.sceneObject.matrix.copy(new THREE.Matrix4(
+    this.transformMatrix.data[0], this.transformMatrix.data[1], this.transformMatrix.data[2], this.transformMatrix.data[3],
+    this.transformMatrix.data[4], this.transformMatrix.data[5], this.transformMatrix.data[6], this.transformMatrix.data[7],
+    this.transformMatrix.data[8], this.transformMatrix.data[9], this.transformMatrix.data[10], this.transformMatrix.data[11],
+    0, 0, 0, 1));
+};

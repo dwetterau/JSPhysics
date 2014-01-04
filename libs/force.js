@@ -6,15 +6,15 @@ ForceGenerator.prototype.updateForce = function(body, dt) {
   throw "Unimplemented updateForce method!";
 };
 
-ForceGenerator.prototype.addObjectId = function(id) {
+ForceGenerator.prototype.addBodyId = function(id) {
   this.bodyIds[id] = id;
 };
 
-ForceGenerator.prototype.removeObjectId = function(id) {
+ForceGenerator.prototype.removeBodyId = function(id) {
   delete this.bodyIds[id];
 };
 
-ForceGenerator.prototype.getObjectIds = function() {
+ForceGenerator.prototype.getBodyIds = function() {
   return this.bodyIds;
 };
 

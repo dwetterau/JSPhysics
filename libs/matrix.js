@@ -3,6 +3,18 @@ function Matrix3(data) {
   this.data = data.slice(0);
 }
 
+Matrix3.prototype.makeIdentity = function() {
+  this.data[0] = 1;
+  this.data[1] = 0;
+  this.data[2] = 0;
+  this.data[3] = 0;
+  this.data[4] = 1;
+  this.data[5] = 0;
+  this.data[6] = 0;
+  this.data[7] = 0;
+  this.data[8] = 1;
+};
+
 Matrix3.prototype.multiplyVector = function(v) {
   return new Vector3(
       v.x * this.data[0] + v.y * this.data[1] + v.z * this.data[2],
@@ -133,6 +145,21 @@ function Matrix4(data) {
   // Copy input matrix data array (3 x 3)
   this.data = data.slice(0);
 }
+
+Matrix4.prototype.makeIdentity = function() {
+  this.data[0] = 1;
+  this.data[1] = 0;
+  this.data[2] = 0;
+  this.data[3] = 0;
+  this.data[4] = 0;
+  this.data[5] = 1;
+  this.data[6] = 0;
+  this.data[7] = 0;
+  this.data[8] = 0;
+  this.data[9] = 0;
+  this.data[10] = 1;
+  this.data[11] = 0;
+};
 
 Matrix4.prototype.multiplyVector = function(v) {
   return new Vector3(
