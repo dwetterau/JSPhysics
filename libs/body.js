@@ -6,6 +6,7 @@ function BodyBuilder() {
   this.orientation = new Quaternion(1, 0, 0, 0);
   this.velocity = new Vector3(0, 0, 0);
   this.rotation = new Vector3(0, 0, 0);
+  this.geometry = {type: 'UNKNOWN'};
 }
 
 BodyBuilder.prototype.setInverseMass = function(inverseMass) {
@@ -43,6 +44,11 @@ BodyBuilder.prototype.setRotation = function(rotation) {
   return this;
 };
 
+BodyBuilder.prototype.setGeometry = function(geometry) {
+  this.geometry = geometry;
+  return this;
+};
+
 BodyBuilder.prototype.build = function() {
   return new Body(
     this.inverseMass,
@@ -51,11 +57,12 @@ BodyBuilder.prototype.build = function() {
     this.position,
     this.orientation,
     this.velocity,
-    this.rotation
+    this.rotation,
+    this.geometry
   );
 };
 
-function Body(inverseMass, linearDamping, angularDamping, position, orientation, velocity, rotation) {
+function Body(inverseMass, linearDamping, angularDamping, position, orientation, velocity, rotation, geometry) {
   this.inverseMass = inverseMass;
   this.linearDamping = linearDamping;
   this.angularDamping = angularDamping;
@@ -63,6 +70,7 @@ function Body(inverseMass, linearDamping, angularDamping, position, orientation,
   this.orientation = orientation;
   this.velocity = velocity;
   this.rotation = rotation;
+  this.geometry = geometry;
   this.forceAccumulator = new Vector3(0, 0, 0);
   this.torqueAccumulator = new Vector3(0, 0, 0);
 
@@ -264,4 +272,24 @@ Body.prototype.updateSceneObject = function() {
     this.transformMatrix.data[4], this.transformMatrix.data[5], this.transformMatrix.data[6], this.transformMatrix.data[7],
     this.transformMatrix.data[8], this.transformMatrix.data[9], this.transformMatrix.data[10], this.transformMatrix.data[11],
     0, 0, 0, 1));
+};
+
+Body.prototype.getPosition = function() {
+   return this.position;
+};
+
+Body.prototype.getGeometry = function() {
+  return this.geometry;
+};
+
+Body.prototype.isCube = function() {
+  return this.geometry.type == 'cube';
+};
+
+Body.prototype.isSphere = function() {
+  return this.geometry.type == 'sphere';
+};
+
+Body.prototype.isPlane = function() {
+  return this.geometry.type == 'plane';
 };

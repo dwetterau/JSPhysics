@@ -87,3 +87,7 @@ Vector3.prototype.clear = function() {
   this.y = 0;
   this.z = 0;
 };
+
+Vector3.prototype.copy = function() {
+  return new Vector3(this.x, this.y, this.z);
+};

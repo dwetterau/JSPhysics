@@ -39,7 +39,15 @@ World.prototype.addCube = function(w, h, d, pos) {
   cube.matrixAutoUpdate = false;
   cube.overdraw = true;
   cube.dynamic = true;
-  var body = (new BodyBuilder()).setPosition(pos).build();
+  var body = (new BodyBuilder())
+    .setPosition(pos)
+    .setGeometry({
+      type: "cube",
+      dx: w,
+      dy: h,
+      dz: d
+    })
+    .build();
 
   // set up inertia
   var m = body.getMass();
