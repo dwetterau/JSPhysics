@@ -32,7 +32,7 @@ World.prototype.runPhysics = function(dt) {
   }
 };
 
-World.prototype.addCube = function(w, h, d, pos) {
+World.prototype.addBox = function(w, h, d, pos) {
   var cube = new THREE.Mesh(new THREE.CubeGeometry(w, h, d), new THREE.MeshLambertMaterial({
     color: 'blue'
   }));
@@ -42,7 +42,7 @@ World.prototype.addCube = function(w, h, d, pos) {
   var body = (new BodyBuilder())
     .setPosition(pos)
     .setGeometry({
-      type: "cube",
+      type: "box",
       dx: w,
       dy: h,
       dz: d
@@ -60,6 +60,71 @@ World.prototype.addCube = function(w, h, d, pos) {
   body.calculateDerivedData();
   this.addBody(body);
   this.scene.add(cube);
+};
+
+World.prototype.addSphere = function(r, pos) {
+  var sphere = new THREE.Mesh(new THREE.SphereGeometry(r, 100, 100), new THREE.MeshLambertMaterial({
+    color: 'red'
+  }));
+  sphere.matrixAutoUpdate = false;
+  sphere.overdraw = true;
+  sphere.dynamic = true;
+  var body = (new BodyBuilder())
+    .setPosition(pos)
+    .setGeometry({
+      type: "sphere",
+      r: r
+    })
+    .build();
+  // set up inertia
+  var m = body.getMass();
+  var mr2 = 2/5.0 * m * r * r;
+  body.setInertiaTensor(new Matrix3([
+    mr2, 0, 0,
+    0, mr2, 0,
+    0, 0, mr2
+  ]));
+  body.setObject(sphere);
+  body.calculateDerivedData();
+  this.addBody(body);
+  this.scene.add(sphere);
+};
+
+World.prototype.addPlane = function(w, h, normal, offset, isHalfSpace) {
+  var plane = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshNormalMaterial());
+  plane.matrixAutoUpdate = false;
+  plane.overdraw = true;
+  plane.dynamic = true;
+
+  // Set the normal correctly
+  plane.lookAt(new THREE.Vector3(normal.x, normal.y, normal.z));
+  var q = new THREE.Quaternion();
+  q.setFromEuler(plane.rotation);
+
+  var pos = normal.scale(offset);
+
+  var body = (new BodyBuilder())
+    .setPosition(pos)
+    .setGeometry({
+      type: "plane",
+      normal: normal,
+      offset: offset,
+      isHalfSpace: isHalfSpace
+    })
+    .setOrientation(new Quaternion(q.w, q.x, q.y, q.z))
+    .build();
+
+  // set up inertia
+  var m = body.getMass();
+  body.setInertiaTensor(new Matrix3([
+    1/12.0 * m * (h * h), 0, 0,
+    0, 1/12.0 * m * (w * w), 0,
+    0, 0, 1/12.0 * m * (w * w + h * h)
+  ]));
+  body.setObject(plane);
+  body.calculateDerivedData();
+  this.addBody(body);
+  this.scene.add(plane);
 };
 
 World.prototype.render = function() {

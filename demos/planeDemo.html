@@ -20,16 +20,22 @@
 
 <script defer="defer">
     var lastTime = (new Date()).getTime();
+    var theta = 0;
 
     // this function is executed on each animation frame
     function animate(){
         // update
         var dt = (new Date()).getTime() - lastTime;
         lastTime += dt;
+        theta += dt / 1000.0;
 
         // render
         world.runPhysics(dt);
         world.render();
+
+        world.camera.position.z = 300 * Math.cos(theta);
+        world.camera.position.x = 300 * Math.sin(theta);
+        world.camera.lookAt(new THREE.Vector3(0,0,0));
 
         // request new frame
         requestAnimationFrame(function() {
@@ -46,15 +52,26 @@
     document.body.appendChild(renderer.domElement);
 
     // camera
-    world.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
-    world.camera.position.z = 500;
+    world.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, .1, 1000);
+    world.camera.position.z = 300;
+    world.camera.position.x = 100;
 
-    world.addBox(200, 200, 200, new Vector3(0, 0, 0));
-    world.addSphere(50, new Vector3(0, 125, 100));
+    // top plane
+    world.addPlane(100, 100, new Vector3(0, -1, 0), -50, true);
+    // bottom plane
+    world.addPlane(100, 100, new Vector3(0, 1, 0), -50, true);
 
-    // hack to make the cube rotate
-    world.bodies[1].angularDamping = 1;
-    world.bodies[1].rotation = new Vector3(.001, -.001, .001);
+    // right plane
+    world.addPlane(100, 100, new Vector3(-1, 0, 0), -50, true);
+    // left plane
+    world.addPlane(100, 100, new Vector3(1, 0, 0), -50, true);
+
+    // back plane
+    world.addPlane(100, 100, new Vector3(0, 0, 1), -50, true);
+    // front plane
+    world.addPlane(100, 100, new Vector3(0, 0, -1), -50, true);
+
+
 
     // add subtle ambient lighting
     var ambientLight = new THREE.AmbientLight(0x000044);

@@ -282,8 +282,8 @@ Body.prototype.getGeometry = function() {
   return this.geometry;
 };
 
-Body.prototype.isCube = function() {
-  return this.geometry.type == 'cube';
+Body.prototype.isBox = function() {
+  return this.geometry.type == 'box';
 };
 
 Body.prototype.isSphere = function() {
