@@ -37,9 +37,30 @@ World.prototype.updateAllForces = function(dt) {
  */
 World.prototype.runPhysics = function(dt) {
   this.updateAllForces(dt);
-  for (var i = 0; i < this.bodyIds.length; i++) {
+  var i, j;
+  for (i = 0; i < this.bodyIds.length; i++) {
     this.bodies[this.bodyIds[i]].integrate(dt);
   }
+  // Check for collisions
+  if (this.collisionDetector) {
+    var collisionsToResolve = [];
+
+    for (i = 0; i < this.bodyIds.length; i++) {
+      for (j = i + 1; j < this.bodyIds.length; j++) {
+        var collisionList = this.collisionDetector.getCollisions(
+          this.bodies[this.bodyIds[i]],
+          this.bodies[this.bodyIds[j]]);
+        // TODO: Actually process the collisions
+        if (collisionList.length > 0) {
+          collisionsToResolve.push.apply(collisionsToResolve, collisionList);
+        }
+      }
+    }
+  }
+};
+
+World.prototype.addCollisionDetector = function(threshold) {
+  this.collisionDetector = new CollisionDetector(threshold);
 };
 
 World.prototype.addGravity = function(g) {
