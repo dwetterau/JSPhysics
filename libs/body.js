@@ -109,6 +109,9 @@ Body.prototype.calculateTransformMatrix = function() {
 };
 
 Body.prototype.transformInertiaTensor = function() {
+  if (!this.hasFiniteMass()) {
+    return;
+  }
   var t4 = this.transformMatrix.data[0] * this.inverseInertiaTensor.data[0] +
       this.transformMatrix.data[1] * this.inverseInertiaTensor.data[3] +
       this.transformMatrix.data[2] * this.inverseInertiaTensor.data[6];
@@ -193,8 +196,7 @@ Body.prototype.getPointInBodySpace = function(p) {
  * @param v
  */
 Body.prototype.addForce = function(v) {
-  this.forceAccumulator.add(v);
-  this.isAwake = true;
+  this.forceAccumulator.addInPlace(v);
 };
 
 /**
@@ -205,8 +207,6 @@ Body.prototype.addForce = function(v) {
 Body.prototype.addForceAtBodyPoint = function(v, p) {
   var pointInWorld = this.getPointInWorldSpace(p);
   this.addForceAtPoint(v, pointInWorld);
-
-  this.isAwake = true;
 };
 
 /**
@@ -235,18 +235,20 @@ Body.prototype.clearAccumulators = function() {
  * @param dt the change in time to integrate over
  */
 Body.prototype.integrate = function(dt) {
+
   var acceleration = new Vector3(0, 0, 0);
   acceleration.addScaledVector(this.forceAccumulator, this.inverseMass);
-  var angularAcceleration = this.inverseInertiaTensorWorld.multiplyVector(this.torqueAccumulator);
 
   this.velocity.scaleInPlace(Math.pow(this.linearDamping, dt));
-  this.rotation.scaleInPlace(Math.pow(this.angularDamping, dt));
-
   this.velocity.addScaledVector(acceleration, dt);
-  this.rotation.addScaledVector(angularAcceleration, dt);
-
   this.position.addScaledVector(this.velocity, dt);
-  this.orientation.addScaledVector(this.rotation, dt);
+
+  if (this.hasFiniteMass()) {
+    var angularAcceleration = this.inverseInertiaTensorWorld.multiplyVector(this.torqueAccumulator);
+    this.rotation.scaleInPlace(Math.pow(this.angularDamping, dt));
+    this.rotation.addScaledVector(angularAcceleration, dt);
+    this.orientation.addScaledVector(this.rotation, dt);
+  }
 
   this.calculateDerivedData();
   this.updateSceneObject();
@@ -255,14 +257,6 @@ Body.prototype.integrate = function(dt) {
 
 Body.prototype.hasFiniteMass = function() {
   return this.inverseMass > 0;
-};
-
-Body.prototype.getMass = function() {
-  return 1 / this.inverseMass;
-};
-
-Body.prototype.setObject = function(sceneObject) {
-  this.sceneObject = sceneObject;
 };
 
 Body.prototype.updateSceneObject = function() {
@@ -274,14 +268,37 @@ Body.prototype.updateSceneObject = function() {
     0, 0, 0, 1));
 };
 
-Body.prototype.getPosition = function() {
-   return this.position;
+// Needed Setters
+Body.prototype.setGeometry = function(geometry) {
+  this.geometry = geometry;
 };
 
+Body.prototype.setObject = function(sceneObject) {
+  this.sceneObject = sceneObject;
+};
+
+Body.prototype.setOrientation = function(orientation) {
+  this.orientation = orientation;
+};
+
+Body.prototype.setPosition = function(position) {
+  this.position = position;
+};
+
+// Needed Getters
 Body.prototype.getGeometry = function() {
   return this.geometry;
 };
 
+Body.prototype.getMass = function() {
+  return 1 / this.inverseMass;
+};
+
+Body.prototype.getPosition = function() {
+   return this.position;
+};
+
+// Body type checks
 Body.prototype.isBox = function() {
   return this.geometry.type == 'box';
 };

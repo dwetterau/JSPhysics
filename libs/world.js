@@ -3,7 +3,7 @@ function World() {
   this.bodyIds = [];
   this.bodies = {};
   this.bodyCounter = 0;
-  this.forceGenerators = [];
+  this.forceGenerators = {};
 
   // Rendering attributes
   this.scene = new THREE.Scene();
@@ -17,14 +17,24 @@ World.prototype.addBody = function(body) {
 };
 
 World.prototype.updateAllForces = function(dt) {
-  for(var i = 0; i < this.forceGenerators.length; i++) {
-    var bodiesToApply = this.forceGenerators[i].getBodyIds();
-    for (var j = 0; j < bodiesToApply.length; j++) {
-      this.forceGenerators[i].updateForce(this.bodies[bodiesToApply[j]], dt);
+  for(var key in this.forceGenerators) {
+    if (!this.forceGenerators.hasOwnProperty(key)) {
+      continue;
+    }
+    var bodiesToApply = this.forceGenerators[key].getBodyIds();
+    for (var bodyId in bodiesToApply) {
+      if (!bodiesToApply.hasOwnProperty(bodyId)) {
+        continue;
+      }
+      this.forceGenerators[key].updateForce(this.bodies[bodyId], dt);
     }
   }
 };
 
+/**
+ * The main method for the physics engine
+ * @param dt The amount of time to integrate over in seconds
+ */
 World.prototype.runPhysics = function(dt) {
   this.updateAllForces(dt);
   for (var i = 0; i < this.bodyIds.length; i++) {
@@ -32,23 +42,30 @@ World.prototype.runPhysics = function(dt) {
   }
 };
 
-World.prototype.addBox = function(w, h, d, pos) {
+World.prototype.addGravity = function(g) {
+  this.forceGenerators.gravity = new Gravity(g);
+};
+
+World.prototype.addGravityToBody = function(bodyId) {
+  if (!this.forceGenerators.gravity) {
+    throw "Gravity force doesn't exist!";
+  }
+  this.forceGenerators.gravity.addBodyId(bodyId);
+};
+
+World.prototype.addBox = function(w, h, d, body) {
   var cube = new THREE.Mesh(new THREE.CubeGeometry(w, h, d), new THREE.MeshLambertMaterial({
     color: 'blue'
   }));
   cube.matrixAutoUpdate = false;
   cube.overdraw = true;
   cube.dynamic = true;
-  var body = (new BodyBuilder())
-    .setPosition(pos)
-    .setGeometry({
-      type: "box",
-      dx: w,
-      dy: h,
-      dz: d
-    })
-    .build();
-
+  body.setGeometry({
+    type: "box",
+    dx: w,
+    dy: h,
+    dz: d
+  });
   // set up inertia
   var m = body.getMass();
   body.setInertiaTensor(new Matrix3([
@@ -58,24 +75,21 @@ World.prototype.addBox = function(w, h, d, pos) {
   ]));
   body.setObject(cube);
   body.calculateDerivedData();
-  this.addBody(body);
   this.scene.add(cube);
+  return this.addBody(body);
 };
 
-World.prototype.addSphere = function(r, pos) {
+World.prototype.addSphere = function(r, body) {
   var sphere = new THREE.Mesh(new THREE.SphereGeometry(r, 100, 100), new THREE.MeshLambertMaterial({
     color: 'red'
   }));
   sphere.matrixAutoUpdate = false;
   sphere.overdraw = true;
   sphere.dynamic = true;
-  var body = (new BodyBuilder())
-    .setPosition(pos)
-    .setGeometry({
-      type: "sphere",
-      r: r
-    })
-    .build();
+  body.setGeometry({
+    type: "sphere",
+    r: r
+  });
   // set up inertia
   var m = body.getMass();
   var mr2 = 2/5.0 * m * r * r;
@@ -86,11 +100,11 @@ World.prototype.addSphere = function(r, pos) {
   ]));
   body.setObject(sphere);
   body.calculateDerivedData();
-  this.addBody(body);
   this.scene.add(sphere);
+  return this.addBody(body);
 };
 
-World.prototype.addPlane = function(w, h, normal, offset, isHalfSpace) {
+World.prototype.addPlane = function(w, h, normal, offset, isHalfSpace, body) {
   var plane = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshNormalMaterial());
   plane.matrixAutoUpdate = false;
   plane.overdraw = true;
@@ -103,16 +117,14 @@ World.prototype.addPlane = function(w, h, normal, offset, isHalfSpace) {
 
   var pos = normal.scale(offset);
 
-  var body = (new BodyBuilder())
-    .setPosition(pos)
-    .setGeometry({
+  body.setPosition(pos);
+  body.setGeometry({
       type: "plane",
       normal: normal,
       offset: offset,
       isHalfSpace: isHalfSpace
-    })
-    .setOrientation(new Quaternion(q.w, q.x, q.y, q.z))
-    .build();
+  });
+  body.setOrientation(new Quaternion(q.w, q.x, q.y, q.z));
 
   // set up inertia
   var m = body.getMass();
@@ -123,8 +135,8 @@ World.prototype.addPlane = function(w, h, normal, offset, isHalfSpace) {
   ]));
   body.setObject(plane);
   body.calculateDerivedData();
-  this.addBody(body);
   this.scene.add(plane);
+  return this.addBody(body);
 };
 
 World.prototype.render = function() {

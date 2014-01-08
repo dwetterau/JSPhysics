@@ -49,8 +49,12 @@
     world.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
     world.camera.position.z = 500;
 
-    world.addBox(200, 200, 200, new Vector3(0, 0, 0));
-    world.addSphere(50, new Vector3(0, 125, 100));
+    world.addBox(200, 200, 200, (new BodyBuilder())
+            .setPosition(new Vector3(0, 0, 0))
+            .build());
+    world.addSphere(50, (new BodyBuilder())
+            .setPosition(new Vector3(0, 125, 100))
+            .build());
 
     // hack to make the cube rotate
     world.bodies[1].angularDamping = 1;
