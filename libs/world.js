@@ -52,10 +52,15 @@ World.prototype.runPhysics = function(dt) {
           this.bodies[this.bodyIds[j]]);
         // TODO: Actually process the collisions
         if (collisionList.length > 0) {
+          for (var k = 0; k < collisionList.length; k++) {
+            collisionList[k].setBodyIds(this.bodyIds[i], this.bodyIds[j]);
+          }
           collisionsToResolve.push.apply(collisionsToResolve, collisionList);
         }
       }
     }
+    // resolve the collisions
+
   }
 };
 

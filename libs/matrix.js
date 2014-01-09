@@ -123,6 +123,18 @@ Matrix3.prototype.setTranspose = function(mat) {
   this.data[8] = mat.data[8];
 };
 
+Matrix3.prototype.setComponents = function(v1, v2, v3) {
+  this.data[0] = v1.x;
+  this.data[1] = v2.x;
+  this.data[2] = v3.x;
+  this.data[3] = v1.y;
+  this.data[4] = v2.y;
+  this.data[5] = v3.y;
+  this.data[6] = v1.z;
+  this.data[7] = v2.z;
+  this.data[8] = v3.z;
+};
+
 Matrix3.prototype.transpose = function() {
   var mat = new Matrix3(new Array(9));
   mat.setTranspose(this.data);

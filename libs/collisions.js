@@ -2,7 +2,46 @@ function Collision(point, normal, penetration) {
   this.point = point;
   this.normal = normal;
   this.penetration = penetration;
+  this.contactToWorld = new Matrix3(new Array(9));
 }
+
+Collision.prototype.setBodyIds = function(firstId, secondId) {
+  this.firstId = firstId;
+  this.secondId = secondId;
+};
+
+Collision.prototype.calculateContactBasis = function(worldBodies) {
+  var body1 = worldBodies[this.firstId];
+  var body2 = worldBodies[this.secondId];
+
+  var s, firstNormal, secondNormal;
+  if (Math.abs(this.normal.x) > Math.abs(this.normal.y)) {
+    s = 1.0 / Math.sqrt(this.normal.z * this.normal.z + this.normal.x * this.normal.x);
+    firstNormal = new Vector3(
+      this.normal.z * s,
+      0,
+      -this.normal.x * s
+    );
+    secondNormal = new Vector3(
+      this.normal.y * firstNormal.x,
+      this.normal.z * firstNormal.x - this.normal.x * firstNormal.z,
+      -this.normal.y * firstNormal.x
+    );
+  } else {
+    s = 1.0 / Math.sqrt(this.normal.z * this.normal.z + this.normal.y * this.normal.y);
+    firstNormal = new Vector3(
+      0,
+      -this.normal.z * s,
+      this.normal.y * s
+    );
+    secondNormal = new Vector3(
+      this.normal.y * firstNormal.z - this.normal.z * firstNormal.y,
+      -this.normal.x * firstNormal.z,
+      this.normal.x * firstNormal.y
+    );
+  }
+  this.contactToWorld.setComponents(this.normal, firstNormal, secondNormal);
+};
 
 function CollisionDetector(threshold) {
   this.threshold = threshold;
