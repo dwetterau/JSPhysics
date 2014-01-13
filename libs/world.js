@@ -50,7 +50,6 @@ World.prototype.runPhysics = function(dt) {
         var collisionList = this.collisionDetector.getCollisions(
           this.bodies[this.bodyIds[i]],
           this.bodies[this.bodyIds[j]]);
-        // TODO: Actually process the collisions
         if (collisionList.length > 0) {
           for (var k = 0; k < collisionList.length; k++) {
             collisionList[k].setBodyIds(this.bodyIds[i], this.bodyIds[j]);
@@ -60,7 +59,10 @@ World.prototype.runPhysics = function(dt) {
       }
     }
     // resolve the collisions
-
+    for (i = 0; i < collisionsToResolve.length; i++) {
+      // TODO: get restitution from the bodies...
+      collisionsToResolve[i].resolve(world.bodies, .9, dt);
+    }
   }
 };
 

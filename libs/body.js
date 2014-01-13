@@ -268,6 +268,14 @@ Body.prototype.updateSceneObject = function() {
     0, 0, 0, 1));
 };
 
+Body.prototype.addVelocity = function(deltaVelocity) {
+  this.velocity.addInPlace(deltaVelocity);
+};
+
+Body.prototype.addRotation = function(deltaRotation) {
+  this.rotation.addInPlace(deltaRotation);
+};
+
 // Needed Setters
 Body.prototype.setGeometry = function(geometry) {
   this.geometry = geometry;
@@ -290,12 +298,24 @@ Body.prototype.getGeometry = function() {
   return this.geometry;
 };
 
+Body.prototype.getInverseMass = function() {
+  return this.inverseMass;
+};
+
 Body.prototype.getMass = function() {
   return 1 / this.inverseMass;
 };
 
 Body.prototype.getPosition = function() {
    return this.position;
+};
+
+Body.prototype.getRotation = function() {
+  return this.rotation;
+};
+
+Body.prototype.getVelocity = function() {
+  return this.velocity;
 };
 
 // Body type checks

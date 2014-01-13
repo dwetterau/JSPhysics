@@ -22,6 +22,13 @@ Matrix3.prototype.multiplyVector = function(v) {
       v.x * this.data[6] + v.y * this.data[7] + v.z * this.data[8]);
 };
 
+Matrix3.prototype.multiplyVectorTranspose = function(v) {
+  return new Vector3(
+    v.x * this.data[0] + v.y * this.data[3] + v.z * this.data[6],
+    v.x * this.data[1] + v.y * this.data[4] + v.z * this.data[7],
+    v.x * this.data[2] + v.y * this.data[5] + v.z * this.data[8]);
+};
+
 Matrix3.prototype.multiplyVectorInverse = function(v) {
   var tmp = new Vector3(v.x, v.y, v.z);
   tmp.x -= this.data[3];

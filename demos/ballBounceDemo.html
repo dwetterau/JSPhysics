@@ -32,6 +32,7 @@
 
         // render
         world.runPhysics(dt / 1000.0);
+        //world.runPhysics(.005);
         world.render();
 
         // Spin around the ball
@@ -56,8 +57,8 @@
     // camera
     world.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, .1, 1000);
     world.camera.position.x = 0;
-    world.camera.position.y = 20;
-    world.camera.position.z = 100;
+    world.camera.position.y = 2;
+    world.camera.position.z = 20;
 
 
     world.addGravity(new Vector3(0, -9.81, 0));
@@ -67,8 +68,9 @@
     world.addPlane(1000, 1000, new Vector3(0, 1, 0), 0, true, (new BodyBuilder())
             .setInverseMass(0)
             .build());
-    var ballId = world.addSphere(10, (new BodyBuilder())
-            .setPosition(new Vector3(0, 20, 0))
+    var ballId = world.addSphere(1, (new BodyBuilder())
+            .setPosition(new Vector3(0, 4, 0))
+            .setVelocity(new Vector3(0, 4, 0))
             .build());
     world.addGravityToBody(ballId);
 
