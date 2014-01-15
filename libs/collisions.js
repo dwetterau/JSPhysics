@@ -5,6 +5,8 @@ function Collision(point, normal, penetration) {
   this.contactToWorld = new Matrix3(new Array(9));
 }
 
+Collision.prototype.angularLimit = .2;
+
 Collision.prototype.setBodyIds = function(firstId, secondId) {
   this.firstId = firstId;
   this.secondId = secondId;
@@ -20,7 +22,10 @@ Collision.prototype.resolve = function(worldBodies, restitution, dt) {
   this.calculateDesiredVelocity();
   this.calculateImpulseContact();
   this.applyVelocityChange();
-  // TODO: resolve interpenetration
+
+  // interpenetration resolution
+  this.calculateInertia();
+  this.applyPositionChange();
 };
 
 Collision.prototype.calculateContactBasis = function() {
@@ -116,6 +121,97 @@ Collision.prototype.applyVelocityChange = function() {
   }
 };
 
+Collision.prototype.calculateInertia = function() {
+  var body1 = this.worldBodies[this.firstId];
+  var body2 = this.worldBodies[this.secondId];
+
+  var angularInertiaWorld, angularInertia = 0, linearInertia = 0, totalInertia = 0;
+  if (body1.hasFiniteMass()) {
+    angularInertiaWorld = this.point.sub(body1.position).cross(this.normal);
+    angularInertiaWorld = body1.inverseInertiaTensorWorld.multiplyVector(angularInertiaWorld);
+    angularInertiaWorld = angularInertiaWorld.cross(this.point.sub(body1.position));
+    angularInertia = angularInertiaWorld.dot(this.normal);
+    linearInertia = body1.getInverseMass();
+    totalInertia += angularInertia + linearInertia;
+  }
+  this.body1Inertia = {
+    angular: angularInertia,
+    linear: linearInertia
+  };
+  angularInertia = 0;
+  linearInertia = 0;
+
+  if (body2.hasFiniteMass()) {
+    angularInertiaWorld = this.point.sub(body2.position).cross(this.normal);
+    angularInertiaWorld = body2.inverseInertiaTensorWorld.multiplyVector(angularInertiaWorld);
+    angularInertiaWorld = angularInertiaWorld.cross(this.point.sub(body2.position));
+    angularInertia = angularInertiaWorld.dot(this.normal);
+    linearInertia = body2.getInverseMass();
+    totalInertia += angularInertia + linearInertia;
+  }
+  this.body2Inertia = {
+    angular: angularInertia,
+    linear: linearInertia
+  };
+  this.body1Move = this.correctMovements(
+      body1, 1, this.body1Inertia.linear, this.body1Inertia.angular, totalInertia);
+  this.body2Move = this.correctMovements(
+      body2, -1, this.body2Inertia.linear, this.body2Inertia.angular, totalInertia);
+};
+
+Collision.prototype.correctMovements = function(body, sign, linearInertia, angularInertia, totalInertia) {
+  var angularMove = sign * this.penetration * (angularInertia / totalInertia);
+  var linearMove = sign * this.penetration * (linearInertia / totalInertia);
+
+  var projection = this.point.sub(body.position);
+  projection.addScaledVector(this.normal, -projection.dot(this.normal));
+  var maxMagnitude = this.angularLimit * projection.magnitude();
+  var totalMove;
+  if (angularMove < -maxMagnitude) {
+    totalMove = angularMove + linearMove;
+    angularMove = -maxMagnitude;
+    linearMove = totalMove - angularMove;
+  } else if (angularMove > maxMagnitude) {
+    totalMove = angularMove + linearMove;
+    angularMove = maxMagnitude;
+    linearMove = totalMove - angularMove;
+  }
+  return {
+    linear: linearMove,
+    angular: angularMove
+  };
+};
+
+Collision.prototype.applyPositionChange = function() {
+  var body1 = this.worldBodies[this.firstId];
+  var body2 = this.worldBodies[this.secondId];
+
+  if (body1.hasFiniteMass()) {
+    this.applyPositionChangeToBody(body1, this.body1Move, this.body1Inertia);
+  }
+  if (body2.hasFiniteMass()) {
+    this.applyPositionChangeToBody(body2, this.body2Move, this.body2Inertia);
+  }
+};
+
+Collision.prototype.applyPositionChangeToBody = function(body, movements, inertia) {
+  var angularChange;
+  if (movements.angular == 0) {
+    angularChange = new Vector3(0, 0, 0);
+  } else {
+    var targetAngularDirection = this.point.sub(body.position).cross(this.normal);
+    angularChange = body.inverseInertiaTensorWorld.multiplyVector(targetAngularDirection)
+        .scale(movements.angular / inertia.angular);
+  }
+  var linearChange = this.normal.scale(movements.linear);
+  body.addMovement(linearChange);
+  var q = body.getOrientation();
+  q.addScaledVector(angularChange, 1.0);
+  body.setOrientation(q);
+  // TODO: something with awakening and seeing if I need this update
+  body.calculateDerivedData();
+};
+
 function CollisionDetector(threshold) {
   this.threshold = threshold;
 }
@@ -129,6 +225,9 @@ CollisionDetector.prototype.getCollisions = function(body_1, body_2) {
   }
   if (body_1.isPlane() && body_2.isSphere()) {
     return this.getSpherePlaneCollisions(body_2, body_1, true);
+  }
+  if (body_1.isPlane() && body_2.isPlane()) {
+    return [];
   }
   throw Error("Unknown Geometry / Collision Type");
 };

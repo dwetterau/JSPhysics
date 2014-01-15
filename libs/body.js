@@ -276,6 +276,10 @@ Body.prototype.addRotation = function(deltaRotation) {
   this.rotation.addInPlace(deltaRotation);
 };
 
+Body.prototype.addMovement = function(deltaPosition) {
+  this.position.addInPlace(deltaPosition);
+};
+
 // Needed Setters
 Body.prototype.setGeometry = function(geometry) {
   this.geometry = geometry;
@@ -304,6 +308,10 @@ Body.prototype.getInverseMass = function() {
 
 Body.prototype.getMass = function() {
   return 1 / this.inverseMass;
+};
+
+Body.prototype.getOrientation = function() {
+  return this.orientation;
 };
 
 Body.prototype.getPosition = function() {

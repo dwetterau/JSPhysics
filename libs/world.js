@@ -61,7 +61,7 @@ World.prototype.runPhysics = function(dt) {
     // resolve the collisions
     for (i = 0; i < collisionsToResolve.length; i++) {
       // TODO: get restitution from the bodies...
-      collisionsToResolve[i].resolve(world.bodies, .9, dt);
+      collisionsToResolve[i].resolve(world.bodies, .95, dt);
     }
   }
 };
