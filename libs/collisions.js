@@ -226,6 +226,12 @@ CollisionDetector.prototype.getCollisions = function(body_1, body_2) {
   if (body_1.isPlane() && body_2.isSphere()) {
     return this.getSpherePlaneCollisions(body_2, body_1, true);
   }
+  if (body_1.isBox() && body_2.isPlane()) {
+    return this.getBoxPlaneCollisions(body_1, body_2, false);
+  }
+  if (body_1.isPlane() && body_2.isBox()) {
+    return this.getBoxPlaneCollisions(body_2, body_1, true);
+  }
   if (body_1.isPlane() && body_2.isPlane()) {
     return [];
   }
@@ -286,6 +292,29 @@ CollisionDetector.prototype.getSpherePlaneCollisions = function(sphere, plane, f
           (flipped ? normal.scale(-1) : normal),
           penetration
       )
-    ]
+    ];
   }
+};
+
+CollisionDetector.prototype.getBoxPlaneCollisions = function(box, plane, flipped) {
+  var coefficients = [[1, 1, 1], [-1, -1, -1], [-1, 1, 1], [1, -1, 1],
+                [1, 1, -1], [-1, -1, 1], [-1, 1, -1], [1, -1, -1]];
+  var i;
+  var collisions = [];
+  for (i = 0; i < 8; i++) {
+    var point = new Vector3(coefficients[i][0] * box.getGeometry().dx / 2,
+        coefficients[i][1] * box.getGeometry().dy / 2,
+        coefficients[i][2] * box.getGeometry().dz / 2);
+    point = box.getPointInWorldSpace(point);
+    var distance = plane.getGeometry().normal.dot(point);
+    if (distance <= plane.getGeometry().offset + this.threshold) {
+      collisions.push(new Collision(
+        point,
+        (flipped ? plane.getGeometry().normal.scale(-1) : plane.getGeometry().copy()),
+        plane.getGeometry().offset - distance
+      ));
+    }
+  }
+  if (collisions.length > 0) debugger;
+  return collisions;
 };
