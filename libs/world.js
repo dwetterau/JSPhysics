@@ -58,16 +58,18 @@ World.prototype.runPhysics = function(dt) {
         }
       }
     }
-    // resolve the collisions
-    for (i = 0; i < collisionsToResolve.length; i++) {
-      // TODO: get restitution from the bodies...
-      collisionsToResolve[i].resolve(world.bodies, .95, dt);
+    if (collisionsToResolve.length == 0) {
+      return;
     }
+    this.collisionResolver.initializeContacts(collisionsToResolve, this.bodies, 0.95, dt);
+    this.collisionResolver.adjustPositions(collisionsToResolve, this.bodies);
+    this.collisionResolver.adjustVelocities(collisionsToResolve, this.bodies);
   }
 };
 
-World.prototype.addCollisionDetector = function(threshold) {
+World.prototype.addCollisionDetector = function(threshold, iterationLimit) {
   this.collisionDetector = new CollisionDetector(threshold);
+  this.collisionResolver = new CollisionResolver(threshold, iterationLimit);
 };
 
 World.prototype.addGravity = function(g) {

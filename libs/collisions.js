@@ -10,22 +10,24 @@ Collision.prototype.angularLimit = .2;
 Collision.prototype.setBodyIds = function(firstId, secondId) {
   this.firstId = firstId;
   this.secondId = secondId;
+  this.ids = [firstId, secondId];
 };
 
-Collision.prototype.resolve = function(worldBodies, restitution, dt) {
-  this.worldBodies = worldBodies;
-  this.restitution = restitution;
-  // Will be needed with friction
-  this.dt = dt;
-
-  this.calculateContactBasis();
-  this.calculateDesiredVelocity();
-  this.calculateImpulseContact();
-  this.applyVelocityChange();
-
-  // interpenetration resolution
+Collision.prototype.updatePosition = function() {
   this.calculateInertia();
-  this.applyPositionChange();
+  return this.applyPositionChange();
+};
+
+Collision.prototype.updateVelocity = function() {
+  this.calculateImpulseContact();
+  return this.applyVelocityChange();
+};
+
+Collision.prototype.calculateRelativePositions = function() {
+  var relativePosition = {};
+  relativePosition[this.firstId] = this.point.sub(this.worldBodies[this.firstId].position);
+  relativePosition[this.secondId] = this.point.sub(this.worldBodies[this.secondId].position);
+  this.relativePosition = relativePosition;
 };
 
 Collision.prototype.calculateContactBasis = function() {
@@ -59,10 +61,10 @@ Collision.prototype.calculateContactBasis = function() {
   this.contactToWorld.setComponents(this.normal, firstNormal, secondNormal);
 };
 
-Collision.prototype.calculateDesiredVelocity = function() {
+Collision.prototype.calculateInitialContactVelocity = function() {
   var contactVelocity = this.calculateLocalVelocity(this.worldBodies[this.firstId]);
   contactVelocity.subInPlace(this.calculateLocalVelocity(this.worldBodies[this.secondId]));
-  this.desiredDeltaVelocity = -contactVelocity.x * (1 + this.restitution);
+  this.contactVelocity = contactVelocity;
 };
 
 Collision.prototype.calculateLocalVelocity = function(body) {
@@ -71,24 +73,25 @@ Collision.prototype.calculateLocalVelocity = function(body) {
   return this.contactToWorld.multiplyVectorTranspose(velocity);
 };
 
+Collision.prototype.calculateDesiredVelocity = function() {
+  this.desiredDeltaVelocity = -this.contactVelocity.x * (1 + this.restitution);
+};
+
 Collision.prototype.calculateImpulseContact = function() {
   var body1 = this.worldBodies[this.firstId];
   var body2 = this.worldBodies[this.secondId];
 
-  var deltaVelocity = 0;
-  var relativeContactPosition, deltaVWorld;
+  var deltaVelocity = 0, deltaVWorld;
   if (body1.hasFiniteMass()) {
-    relativeContactPosition = this.point.sub(body1.position);
-    deltaVWorld = relativeContactPosition.cross(this.normal);
+    deltaVWorld = this.relativePosition[this.firstId].cross(this.normal);
     deltaVWorld = body1.inverseInertiaTensor.multiplyVector(deltaVWorld);
-    deltaVWorld = deltaVWorld.cross(relativeContactPosition);
+    deltaVWorld = deltaVWorld.cross(this.relativePosition[this.firstId]);
     deltaVelocity += body1.getInverseMass() + deltaVWorld.dot(this.normal);
   }
   if (body2.hasFiniteMass()) {
-    relativeContactPosition = this.point.sub(body2.position);
-    deltaVWorld = relativeContactPosition.cross(this.normal);
+    deltaVWorld = this.relativePosition[this.secondId].cross(this.normal);
     deltaVWorld = body2.inverseInertiaTensor.multiplyVector(deltaVWorld);
-    deltaVWorld = deltaVWorld.cross(relativeContactPosition);
+    deltaVWorld = deltaVWorld.cross(this.relativePosition[this.secondId]);
     deltaVelocity += body2.getInverseMass() + deltaVWorld.dot(this.normal);
   }
   this.impulseContact = new Vector3(this.desiredDeltaVelocity / deltaVelocity, 0, 0);
@@ -100,25 +103,35 @@ Collision.prototype.applyVelocityChange = function() {
   var body2 = this.worldBodies[this.secondId];
 
   var impulsiveTorque, velocityChange, rotationChange;
+  var changes = {};
   if (body1.hasFiniteMass()) {
-    impulsiveTorque = this.point.sub(body1.position).cross(impulse);
+    impulsiveTorque = this.relativePosition[this.firstId].cross(impulse);
     rotationChange = body1.inverseInertiaTensor.multiplyVector(impulsiveTorque);
     velocityChange = new Vector3(0, 0, 0);
     velocityChange.addScaledVector(impulse, body1.getInverseMass());
 
     body1.addVelocity(velocityChange);
     body1.addRotation(rotationChange);
+    changes[this.firstId] = {
+      velocityChange: velocityChange,
+      rotationChange: rotationChange
+    }
   }
 
   if (body2.hasFiniteMass()) {
-    impulsiveTorque = this.point.sub(body2.position).cross(impulse);
-    rotationChange = body2.inverseInertiaTensor.multiplyVector(impulsiveTorque);
+    impulsiveTorque = this.relativePosition[this.secondId].cross(impulse);
+    rotationChange = body2.inverseInertiaTensor.multiplyVector(impulsiveTorque).scale(-1);
     velocityChange = new Vector3(0, 0, 0);
     velocityChange.addScaledVector(impulse, -body2.getInverseMass());
 
     body2.addVelocity(velocityChange);
     body2.addRotation(rotationChange);
+    changes[this.secondId] = {
+      velocityChange: velocityChange,
+      rotationChange: rotationChange
+    }
   }
+  return changes;
 };
 
 Collision.prototype.calculateInertia = function() {
@@ -127,9 +140,9 @@ Collision.prototype.calculateInertia = function() {
 
   var angularInertiaWorld, angularInertia = 0, linearInertia = 0, totalInertia = 0;
   if (body1.hasFiniteMass()) {
-    angularInertiaWorld = this.point.sub(body1.position).cross(this.normal);
+    angularInertiaWorld = this.relativePosition[this.firstId].cross(this.normal);
     angularInertiaWorld = body1.inverseInertiaTensorWorld.multiplyVector(angularInertiaWorld);
-    angularInertiaWorld = angularInertiaWorld.cross(this.point.sub(body1.position));
+    angularInertiaWorld = angularInertiaWorld.cross(this.relativePosition[this.firstId]);
     angularInertia = angularInertiaWorld.dot(this.normal);
     linearInertia = body1.getInverseMass();
     totalInertia += angularInertia + linearInertia;
@@ -142,9 +155,9 @@ Collision.prototype.calculateInertia = function() {
   linearInertia = 0;
 
   if (body2.hasFiniteMass()) {
-    angularInertiaWorld = this.point.sub(body2.position).cross(this.normal);
+    angularInertiaWorld = this.relativePosition[this.secondId].cross(this.normal);
     angularInertiaWorld = body2.inverseInertiaTensorWorld.multiplyVector(angularInertiaWorld);
-    angularInertiaWorld = angularInertiaWorld.cross(this.point.sub(body2.position));
+    angularInertiaWorld = angularInertiaWorld.cross(this.relativePosition[this.secondId]);
     angularInertia = angularInertiaWorld.dot(this.normal);
     linearInertia = body2.getInverseMass();
     totalInertia += angularInertia + linearInertia;
@@ -185,13 +198,15 @@ Collision.prototype.correctMovements = function(body, sign, linearInertia, angul
 Collision.prototype.applyPositionChange = function() {
   var body1 = this.worldBodies[this.firstId];
   var body2 = this.worldBodies[this.secondId];
+  var movements = {};
 
   if (body1.hasFiniteMass()) {
-    this.applyPositionChangeToBody(body1, this.body1Move, this.body1Inertia);
+    movements[this.firstId] = this.applyPositionChangeToBody(body1, this.body1Move, this.body1Inertia);
   }
   if (body2.hasFiniteMass()) {
-    this.applyPositionChangeToBody(body2, this.body2Move, this.body2Inertia);
+    movements[this.secondId] = this.applyPositionChangeToBody(body2, this.body2Move, this.body2Inertia);
   }
+  return movements;
 };
 
 Collision.prototype.applyPositionChangeToBody = function(body, movements, inertia) {
@@ -210,6 +225,106 @@ Collision.prototype.applyPositionChangeToBody = function(body, movements, inerti
   body.setOrientation(q);
   // TODO: something with awakening and seeing if I need this update
   body.calculateDerivedData();
+  return {
+    linearChange: linearChange,
+    angularChange: angularChange
+  };
+};
+
+function CollisionResolver(threshold, maxIterations) {
+  this.threshold = threshold;
+  this.maxIterations = maxIterations;
+}
+
+CollisionResolver.prototype.initializeContacts = function(contacts, worldBodies, restitution, dt) {
+  contacts.forEach(function(contact) {
+    contact.worldBodies = worldBodies;
+    contact.restitution = restitution;
+    contact.dt = dt;
+    contact.calculateRelativePositions();
+    contact.calculateContactBasis();
+    contact.calculateInitialContactVelocity();
+    contact.calculateDesiredVelocity();
+  });
+};
+
+CollisionResolver.prototype.adjustPositions = function(contacts, worldBodies) {
+  var iterationNumber = 0;
+  while (iterationNumber < this.maxIterations) {
+    var maxPenetration = this.threshold;
+    var index = -1, i = 0;
+    for (i = 0; i < contacts.length; i++) {
+      if (contacts[i].penetration > maxPenetration) {
+        maxPenetration = contacts[i].penetration;
+        index = i;
+      }
+    }
+    if (index == -1) {
+      // All collisions resolved!
+      break;
+    }
+    // TODO: something with being awake
+    var movements = contacts[index].updatePosition();
+    // Adjust possibly all contacts after updating the position
+    contacts.forEach(function(contact) {
+      contact.ids.forEach(function(bodyId) {
+        if (!worldBodies[bodyId].hasFiniteMass()) {
+          // Can't move things with infinite mass anyway...
+          return;
+        }
+        contacts[index].ids.forEach(function(movedBodyId) {
+          if (bodyId == movedBodyId) {
+            var deltaPosition = movements[movedBodyId].linearChange.add(
+                movements[movedBodyId].angularChange.cross(contact.relativePosition[bodyId]));
+            var sign = (bodyId == contact.secondId) ? 1 : -1;
+            contact.penetration += sign * deltaPosition.dot(contact.normal);
+          }
+        });
+      });
+    });
+    iterationNumber++;
+  }
+};
+
+CollisionResolver.prototype.adjustVelocities = function(contacts, worldBodies) {
+  var iterationNumber = 0;
+  while (iterationNumber < this.maxIterations) {
+    var maxVelocity = this.threshold;
+    var index = -1, i = 0;
+    for (i = 0; i < contacts.length; i++) {
+      if (contacts[i].desiredDeltaVelocity > maxVelocity) {
+        maxVelocity = contacts[i].desiredDeltaVelocity;
+        index = i;
+      }
+    }
+    if (index == -1) {
+      // All velocities resolved!
+      break;
+    }
+    // TODO: something with being awake
+    var velocities = contacts[index].updateVelocity();
+    // Adjust possibly all contacts after updating the position
+    contacts.forEach(function(contact) {
+      contact.ids.forEach(function(bodyId) {
+        if (!worldBodies[bodyId].hasFiniteMass()) {
+          // Can't move things with infinite mass anyway...
+          return;
+        }
+        contacts[index].ids.forEach(function(movedBodyId) {
+          if (bodyId == movedBodyId) {
+            var deltaVelocity = velocities[movedBodyId].velocityChange.add(
+                velocities[movedBodyId].rotationChange.cross(contact.relativePosition[bodyId])
+            );
+            var sign = (bodyId == contact.secondId) ? -1 : 1;
+            contact.contactVelocity.addInPlace(
+                contact.contactToWorld.multiplyVectorTranspose(deltaVelocity).scale(sign));
+            contact.calculateDesiredVelocity();
+          }
+        });
+      });
+    });
+    iterationNumber++;
+  }
 };
 
 function CollisionDetector(threshold) {
@@ -270,7 +385,7 @@ CollisionDetector.prototype.getSpherePlaneCollisions = function(sphere, plane, f
     return [
       new Collision(
           sphere.getPosition().sub(plane.getGeometry().normal.scale(sphereDistance + sphere.getGeometry().r)),
-          (flipped ? plane.getGeometry().normal.scale(-1) : plane.getGeometry().copy()),
+          (flipped) ? plane.getGeometry().normal.scale(-1) : plane.getGeometry().normal.copy(),
           -sphereDistance
       )
     ];
@@ -309,12 +424,11 @@ CollisionDetector.prototype.getBoxPlaneCollisions = function(box, plane, flipped
     var distance = plane.getGeometry().normal.dot(point);
     if (distance <= plane.getGeometry().offset + this.threshold) {
       collisions.push(new Collision(
-        point,
-        (flipped ? plane.getGeometry().normal.scale(-1) : plane.getGeometry().copy()),
+        plane.getGeometry().normal.scale(plane.getGeometry().offset - distance).add(point),
+        (flipped ? plane.getGeometry().normal.scale(-1) : plane.getGeometry().normal.copy()),
         plane.getGeometry().offset - distance
       ));
     }
   }
-  if (collisions.length > 0) debugger;
   return collisions;
 };

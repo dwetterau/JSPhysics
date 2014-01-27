@@ -1,7 +1,7 @@
 function BodyBuilder() {
   this.inverseMass = 1;
-  this.linearDamping = .999999;
-  this.angularDamping = .999999;
+  this.linearDamping = .95;
+  this.angularDamping = .8;
   this.position = new Vector3(0, 0, 0);
   this.orientation = new Quaternion(1, 0, 0, 0);
   this.velocity = new Vector3(0, 0, 0);

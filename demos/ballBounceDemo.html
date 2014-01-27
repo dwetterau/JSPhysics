@@ -63,7 +63,7 @@
 
 
     world.addGravity(new Vector3(0, -9.81, 0));
-    world.addCollisionDetector(.000000001);
+    world.addCollisionDetector(.0000001, 100);
 
     // ground plane
     world.addPlane(1000, 1000, new Vector3(0, 1, 0), 0, true, (new BodyBuilder())
@@ -81,6 +81,12 @@
     world.addPlane(1000, 1000, new Vector3(0, 0, -1), -15, true, (new BodyBuilder())
             .setInverseMass(0)
             .build());
+    ballId = world.addSphere(1, (new BodyBuilder())
+            .setPosition(new Vector3(1, 8, 0))
+            .setVelocity(new Vector3(2, 4, 0))
+            .build());
+    world.addGravityToBody(ballId);
+
     var ballId = world.addSphere(1, (new BodyBuilder())
             .setPosition(new Vector3(0, 4, 0))
             .setVelocity(new Vector3(5, 4, -.2))
