@@ -356,6 +356,9 @@ CollisionDetector.prototype.getCollisions = function(body_1, body_2) {
   if (body_1.isSphere() && body_2.isBox()) {
     return this.getBoxSphereCollisions(body_2, body_1, true);
   }
+  if (body_1.isBox() && body_2.isBox()) {
+    return this.getBoxBoxCollisions(body_1, body_2);
+  }
   throw Error("Unknown Geometry / Collision Type");
 };
 
@@ -492,4 +495,216 @@ CollisionDetector.prototype.getBoxSphereCollisions = function(box, sphere, flipp
       normal,
       r - Math.sqrt(distance)
   )];
+};
+
+CollisionDetector.prototype.getBoxBoxCollisions = function(box1, box2) {
+  var toCenter = box2.getPosition().sub(box1.getPosition());
+  var resultObj = {
+    smallestPenetration: Number.MAX_VALUE,
+    smallestCase: -1
+  };
+  //Check all 15 axes
+  // Box1 axes
+  resultObj = this.tryAxis(box1, box2, box1.getAxis(0), toCenter, 0,
+      resultObj.smallestPenetration, resultObj.smallestCase);
+  if (!resultObj.result) return [];
+  resultObj = this.tryAxis(box1, box2, box1.getAxis(1), toCenter, 1,
+    resultObj.smallestPenetration, resultObj.smallestCase);
+  if (!resultObj.result) return [];
+  resultObj = this.tryAxis(box1, box2, box1.getAxis(2), toCenter, 2,
+    resultObj.smallestPenetration, resultObj.smallestCase);
+  if (!resultObj.result) return [];
+
+  // Box2 axes
+  resultObj = this.tryAxis(box1, box2, box2.getAxis(0), toCenter, 3,
+    resultObj.smallestPenetration, resultObj.smallestCase);
+  if (!resultObj.result) return [];
+  resultObj = this.tryAxis(box1, box2, box2.getAxis(1), toCenter, 4,
+    resultObj.smallestPenetration, resultObj.smallestCase);
+  if (!resultObj.result) return [];
+  resultObj = this.tryAxis(box1, box2, box2.getAxis(2), toCenter, 5,
+    resultObj.smallestPenetration, resultObj.smallestCase);
+  if (!resultObj.result) return [];
+
+  var bestSingleAxis = resultObj.smallestCase;
+  // edge cross products
+  resultObj = this.tryAxis(box1, box2, box1.getAxis(0).cross(box2.getAxis(0)), toCenter, 6,
+    resultObj.smallestPenetration, resultObj.smallestCase);
+  if (!resultObj.result) return [];
+  resultObj = this.tryAxis(box1, box2, box1.getAxis(0).cross(box2.getAxis(1)), toCenter, 7,
+    resultObj.smallestPenetration, resultObj.smallestCase);
+  if (!resultObj.result) return [];
+  resultObj = this.tryAxis(box1, box2, box1.getAxis(0).cross(box2.getAxis(2)), toCenter, 8,
+    resultObj.smallestPenetration, resultObj.smallestCase);
+  if (!resultObj.result) return [];
+  resultObj = this.tryAxis(box1, box2, box1.getAxis(1).cross(box2.getAxis(0)), toCenter, 9,
+    resultObj.smallestPenetration, resultObj.smallestCase);
+  if (!resultObj.result) return [];
+  resultObj = this.tryAxis(box1, box2, box1.getAxis(1).cross(box2.getAxis(1)), toCenter, 10,
+    resultObj.smallestPenetration, resultObj.smallestCase);
+  if (!resultObj.result) return [];
+  resultObj = this.tryAxis(box1, box2, box1.getAxis(1).cross(box2.getAxis(2)), toCenter, 11,
+    resultObj.smallestPenetration, resultObj.smallestCase);
+  if (!resultObj.result) return [];
+  resultObj = this.tryAxis(box1, box2, box1.getAxis(2).cross(box2.getAxis(0)), toCenter, 12,
+    resultObj.smallestPenetration, resultObj.smallestCase);
+  if (!resultObj.result) return [];
+  resultObj = this.tryAxis(box1, box2, box1.getAxis(2).cross(box2.getAxis(1)), toCenter, 13,
+    resultObj.smallestPenetration, resultObj.smallestCase);
+  if (!resultObj.result) return [];
+  resultObj = this.tryAxis(box1, box2, box1.getAxis(2).cross(box2.getAxis(2)), toCenter, 14,
+    resultObj.smallestPenetration, resultObj.smallestCase);
+  if (!resultObj.result) return [];
+
+  if (resultObj.smallestCase == -1) {
+    return [];
+  }
+
+  if (resultObj.smallestCase < 3) {
+    // Vertex of box 2 is on a face of box 1
+    return this.getPointFaceBoxBox(box1, box2, toCenter,
+        resultObj.smallestCase, resultObj.smallestPenetration);
+  } else if (resultObj.smallestCase < 6) {
+    // Vertex of box 1 is on a face of box 2
+    return this.getPointFaceBoxBox(box2, box1, toCenter.scale(-1),
+        resultObj.smallestCase - 3, resultObj.smallestPenetration);
+  } else {
+    //debugger;
+    // Edge to edge contact
+    var bestCase = resultObj.smallestCase - 6;
+
+    // Determine which axes
+    var box1AxisIndex = Math.floor(bestCase / 3);
+    var box2AxisIndex = bestCase % 3;
+    var box1Axis = box1.getAxis(box1AxisIndex);
+    var box2Axis = box2.getAxis(box2AxisIndex);
+    var axis = box1Axis.cross(box2Axis);
+    axis.normalize();
+
+    if (axis.dot(toCenter) > 0) {
+      axis.scaleInPlace(-1);
+    }
+    // now we know the axis but not the edges
+    var box1EdgePoint = box1.getGeometry().halfSize;
+    var box2EdgePoint = box2.getGeometry().halfSize;
+    for (var i = 0; i < 3; i++) {
+      if (i == box1AxisIndex) {
+        box1EdgePoint[i] = 0;
+      } else if(box1.getAxis(i).dot(axis) > 0) {
+        box1EdgePoint[i] = -box1EdgePoint[i]
+      }
+      if (i == box2AxisIndex) {
+        box2EdgePoint[i] = 0;
+      } else if(box2.getAxis(i).dot(axis) < 0) {
+        box2EdgePoint[i] = -box2EdgePoint[i]
+      }
+    }
+    box1EdgePoint = box1.getPointInWorldSpace(box1EdgePoint);
+    box2EdgePoint = box2.getPointInWorldSpace(box2EdgePoint);
+
+    // Need to calculate the point of closest approach for the two edges
+    var contactPoint = this.getEdgeEdgeContactPoint(
+      box1EdgePoint, box1Axis, box1.getGeometry().halfSize[box1AxisIndex],
+      box2EdgePoint, box2Axis, box2.getGeometry().halfSize[box2AxisIndex],
+      bestSingleAxis > 2
+    );
+
+    return [new Collision(
+      contactPoint,
+      axis,
+      resultObj.smallestPenetration
+    )]
+  }
+};
+
+CollisionDetector.prototype.getEdgeEdgeContactPoint = function(
+    box1Point, box1Direction, box1Size,
+    box2Point, box2Direction, box2Size, useBox1) {
+  var betweenPoints, center1, center2;
+  var dotBetween1, dotBetween2, dotOneTwo, box1DirSq, box2DirSq;
+  var denominator, muA, muB;
+
+  box1DirSq = box1Direction.magnitudeSq();
+  box2DirSq = box2Direction.magnitudeSq();
+  dotOneTwo = box2Direction.dot(box1Direction);
+  betweenPoints = box1Point.sub(box2Point);
+  dotBetween1 = box1Direction.dot(betweenPoints);
+  dotBetween2 = box2Direction.dot(betweenPoints);
+  denominator = box1DirSq * box2DirSq - dotOneTwo * dotOneTwo;
+  if (Math.abs(denominator) < 0.0001) {
+    return useBox1 ? box1Point : box2Point;
+  }
+  muA = (dotOneTwo * dotBetween2 - box2DirSq * dotBetween1) / denominator;
+  muB = (box1DirSq * dotBetween2 - dotOneTwo * dotBetween1) / denominator;
+  if (muA > box1Size || muA < -box1Size || muB > box2Size || muB < -box2Size) {
+    return useBox1 ? box1Point : box2Point;
+  } else {
+    center1 = box1Point.add(box1Direction.scale(muA));
+    center2 = box2Point.add(box2Direction.scale(muB));
+    return center1.scale(.5).add(center2.scale(.5));
+  }
+};
+
+CollisionDetector.prototype.getPointFaceBoxBox = function(box1, box2, toCenter, bestCase, penetration) {
+  var normal = box1.getAxis(bestCase);
+  if (normal.dot(toCenter) > 0) {
+    normal.scaleInPlace(-1);
+  }
+  // Figure out which vertex of box2 we are colliding with
+  var contactPoint = box2.getGeometry().halfSize.copy();
+  if (box2.getAxis(0).dot(normal) < 0) {
+    contactPoint.x = -contactPoint.x;
+  }
+  if (box2.getAxis(1).dot(normal) < 0) {
+    contactPoint.y = -contactPoint.y;
+  }
+  if (box2.getAxis(2).dot(normal) < 0) {
+    contactPoint.z = -contactPoint.z;
+  }
+  return [new Collision(
+    box2.getPointInWorldSpace(contactPoint),
+    normal,
+    penetration
+  )];
+};
+
+CollisionDetector.prototype.tryAxis = function(box1, box2, axis, toCenter, index, smallestPenetration, smallestCase) {
+  if (axis.magnitudeSq() < 0.0001) {
+    return {
+      result: true,
+      smallestPenetration: smallestPenetration,
+      smallestCase: smallestCase
+    };
+  }
+  var penetration = this.penetrationOnAxis(box1, box2, axis, toCenter);
+  if (penetration < 0) {
+    return {
+      result: false,
+      smallestPenetration: smallestPenetration,
+      smallestCase: smallestCase
+    };
+  }
+  if (penetration < smallestPenetration) {
+    smallestPenetration = penetration;
+    smallestCase = index;
+  }
+  return {
+    result: true,
+    smallestPenetration: smallestPenetration,
+    smallestCase: smallestCase
+  };
+};
+
+CollisionDetector.prototype.penetrationOnAxis = function(box1, box2, axis, toCenter) {
+  var project1 = this.transformToAxis(box1, axis);
+  var project2 = this.transformToAxis(box2, axis);
+
+  var distance = Math.abs(toCenter.dot(axis));
+  return project1 + project2 - distance;
+};
+
+CollisionDetector.prototype.transformToAxis = function(box, axis) {
+  return box.getGeometry().dx_h * Math.abs(axis.dot(box.getAxis(0))) +
+    box.getGeometry().dy_h * Math.abs(axis.dot(box.getAxis(1))) +
+    box.getGeometry().dz_h * Math.abs(axis.dot(box.getAxis(2)));
 };

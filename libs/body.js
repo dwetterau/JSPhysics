@@ -191,6 +191,13 @@ Body.prototype.getPointInBodySpace = function(p) {
   return inverseTransform.multiplyVector(p);
 };
 
+Body.prototype.getAxis = function(index) {
+  return new Vector3(
+      this.transformMatrix.data[index],
+    this.transformMatrix.data[index + 4],
+    this.transformMatrix.data[index + 8]);
+};
+
 /**
  * Add a force to the body through the center of mass
  * @param v

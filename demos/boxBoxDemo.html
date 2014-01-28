@@ -28,16 +28,12 @@
         // update
         var dt = (new Date()).getTime() - lastTime;
         lastTime += dt;
-        theta += dt / 1000.0 / 2;
+        theta += dt / 1000.0;
 
         // render
         dt = dt > 10 ? .01 : dt / 1000.0;
         world.runPhysics(dt);
         world.render();
-
-        world.camera.position.z = 20 * Math.cos(theta);
-        world.camera.position.x = 20 * Math.sin(theta);
-        world.camera.lookAt(new THREE.Vector3(0,1,0));
 
         // request new frame
         requestAnimationFrame(function() {
@@ -68,56 +64,30 @@
     world.addPlane(1000, 1000, new Vector3(0, 1, 0), 0, true, (new BodyBuilder())
             .setInverseMass(0)
             .build());
-    world.addPlane(1000, 1000, new Vector3(-1, 0, 0), -8, true, (new BodyBuilder())
+    world.addPlane(1000, 1000, new Vector3(-1, 0, 0), -4, true, (new BodyBuilder())
             .setInverseMass(0)
             .build());
-    world.addPlane(1000, 1000, new Vector3(1, 0, 0), -8, true, (new BodyBuilder())
+    world.addPlane(1000, 1000, new Vector3(1, 0, 0), -4, true, (new BodyBuilder())
             .setInverseMass(0)
             .build());
-    world.addPlane(1000, 1000, new Vector3(0, 0, 1), -8, true, (new BodyBuilder())
+    world.addPlane(1000, 1000, new Vector3(0, 0, 1), -4, true, (new BodyBuilder())
             .setInverseMass(0)
             .build());
-    world.addPlane(1000, 1000, new Vector3(0, 0, -1), -16, true, (new BodyBuilder())
+    world.addPlane(1000, 1000, new Vector3(0, 0, -1), -15, true, (new BodyBuilder())
             .setInverseMass(0)
             .build());
-
-    randomVector = function() {
-        var x = Math.random() * 6 - 3;
-        var y = Math.random() * 6;
-        var z = Math.random() * 6 - 3;
-        return new Vector3(x, y, z);
-    };
-
-    randomSize = function() {
-        return Math.random() * 2 + 1;
-    };
-
-    addRandomBall= function() {
-        var ballId = world.addSphere(randomSize() / 2, (new BodyBuilder())
-                .setPosition(randomVector())
-                .setVelocity(randomVector())
-                .build());
-        world.addGravityToBody(ballId);
-    };
-    addRandomBox= function() {
-        var boxID = world.addBox(randomSize(), randomSize(), randomSize(), (new BodyBuilder())
-                .setPosition(randomVector())
-                .setRotation(randomVector().scale(.5))
-                .setVelocity(randomVector())
-                .build());
-        world.addGravityToBody(boxID);
-    };
-
-    var numBoxes = 5;
-    var numBalls = 5;
-
-    for (var i = 0; i < numBalls; i++) {
-        addRandomBall();
-    }
-    for (i = 0; i < numBoxes; i++) {
-        addRandomBox();
-    }
-
+    var boxID = world.addBox(2, 2, 2, (new BodyBuilder())
+            .setPosition(new Vector3(0, 6, 0))
+            .setRotation(new Vector3(-1, 0, 0))
+            .setVelocity(new Vector3(0, 0, 0))
+            .build());
+    world.addGravityToBody(boxID);
+    boxID = world.addBox(1, 1, 1, (new BodyBuilder())
+            .setPosition(new Vector3(0, 1, 0))
+            .setRotation(new Vector3(1, 1, 1))
+            .setVelocity(new Vector3(0, 4, 0))
+            .build());
+    world.addGravityToBody(boxID);
 
     // add subtle ambient lighting
     var ambientLight = new THREE.AmbientLight(0x000044);
