@@ -35,11 +35,6 @@
         world.runPhysics(dt);
         world.render();
 
-        // Spin around the ball
-        /*world.camera.position.z = 300 * Math.cos(theta);
-        world.camera.position.x = 300 * Math.sin(theta);
-        world.camera.lookAt(new THREE.Vector3(0,0,0));*/
-
         // request new frame
         requestAnimationFrame(function() {
             setTimeout(function() {
@@ -82,21 +77,16 @@
             .setInverseMass(0)
             .build());
     ballId = world.addSphere(1, (new BodyBuilder())
-            .setPosition(new Vector3(1, 8, 0))
-            .setVelocity(new Vector3(2, 4, 0))
+            .setPosition(new Vector3(0, 8, 0))
+            .setVelocity(new Vector3(0, 0, 0))
             .build());
     world.addGravityToBody(ballId);
-
-    var ballId = world.addSphere(1, (new BodyBuilder())
+    var boxID = world.addBox(2, 2, 2, (new BodyBuilder())
             .setPosition(new Vector3(0, 4, 0))
-            .setVelocity(new Vector3(5, 4, -.2))
+            .setRotation(new Vector3(1, 1, 1))
+            .setVelocity(new Vector3(0, 4, 0))
             .build());
-    world.addGravityToBody(ballId);
-    ballId = world.addSphere(1, (new BodyBuilder())
-            .setPosition(new Vector3(1, 5, 0))
-            .setVelocity(new Vector3(2, 4, 0))
-            .build());
-    world.addGravityToBody(ballId);
+    world.addGravityToBody(boxID);
 
     // add subtle ambient lighting
     var ambientLight = new THREE.AmbientLight(0x000044);

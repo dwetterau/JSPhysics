@@ -222,7 +222,7 @@ Matrix4.prototype.multiplyMatrix = function(mat) {
 };
 
 Matrix4.prototype.getDeterminant = function() {
-  return this.data[8] * this.data[5] * this.data[2] +
+  return -this.data[8] * this.data[5] * this.data[2] +
       this.data[4] * this.data[9] * this.data[2] +
       this.data[8] * this.data[1] * this.data[6] -
       this.data[0] * this.data[9] * this.data[6] -
@@ -238,15 +238,15 @@ Matrix4.prototype.setInverse = function(mat) {
   var invDet = 1 / det;
   this.data[0] = (-mat.data[9] * mat.data[6] + mat.data[5] * mat.data[10]) * invDet;
   this.data[4] = (mat.data[8] * mat.data[6] - mat.data[4] * mat.data[10]) * invDet;
-  this.data[8] = (-mat.data[8] * mat.data[5] + mat.data[4] * mat.data[9] * mat.data[15]) * invDet;
+  this.data[8] = (-mat.data[8] * mat.data[5] + mat.data[4] * mat.data[9]) * invDet;
 
   this.data[1] = (mat.data[9] * mat.data[2] - mat.data[1] * mat.data[10]) * invDet;
   this.data[5] = (-mat.data[8] * mat.data[2] + mat.data[0] * mat.data[10]) * invDet;
-  this.data[9] = (mat.data[8] * mat.data[1] - mat.data[0] * mat.data[9] * mat.data[15]) * invDet;
+  this.data[9] = (mat.data[8] * mat.data[1] - mat.data[0] * mat.data[9]) * invDet;
 
-  this.data[2] = (-mat.data[5] * mat.data[2] + mat.data[1] * mat.data[6] * mat.data[15]) * invDet;
-  this.data[6] = (mat.data[4] * mat.data[2] - mat.data[0] * mat.data[6] * mat.data[15]) * invDet;
-  this.data[10] = (-mat.data[4] * mat.data[1] + mat.data[0] * mat.data[5] * mat.data[15]) * invDet;
+  this.data[2] = (-mat.data[5] * mat.data[2] + mat.data[1] * mat.data[6]) * invDet;
+  this.data[6] = (mat.data[4] * mat.data[2] - mat.data[0] * mat.data[6]) * invDet;
+  this.data[10] = (-mat.data[4] * mat.data[1] + mat.data[0] * mat.data[5]) * invDet;
 
   this.data[3] = (
       mat.data[9] * mat.data[6] * mat.data[3] -

@@ -350,6 +350,12 @@ CollisionDetector.prototype.getCollisions = function(body_1, body_2) {
   if (body_1.isPlane() && body_2.isPlane()) {
     return [];
   }
+  if (body_1.isBox() && body_2.isSphere()) {
+    return this.getBoxSphereCollisions(body_1, body_2, false);
+  }
+  if (body_1.isSphere() && body_2.isBox()) {
+    return this.getBoxSphereCollisions(body_2, body_1, true);
+  }
   throw Error("Unknown Geometry / Collision Type");
 };
 
@@ -417,9 +423,9 @@ CollisionDetector.prototype.getBoxPlaneCollisions = function(box, plane, flipped
   var i;
   var collisions = [];
   for (i = 0; i < 8; i++) {
-    var point = new Vector3(coefficients[i][0] * box.getGeometry().dx / 2,
-        coefficients[i][1] * box.getGeometry().dy / 2,
-        coefficients[i][2] * box.getGeometry().dz / 2);
+    var point = new Vector3(coefficients[i][0] * box.getGeometry().dx_h,
+        coefficients[i][1] * box.getGeometry().dy_h,
+        coefficients[i][2] * box.getGeometry().dz_h);
     point = box.getPointInWorldSpace(point);
     var distance = plane.getGeometry().normal.dot(point);
     if (distance <= plane.getGeometry().offset + this.threshold) {
@@ -431,4 +437,59 @@ CollisionDetector.prototype.getBoxPlaneCollisions = function(box, plane, flipped
     }
   }
   return collisions;
+};
+
+CollisionDetector.prototype.getBoxSphereCollisions = function(box, sphere, flipped) {
+  var relativeCenter = box.getPointInBodySpace(sphere.getPosition());
+  var r = sphere.getGeometry().r;
+  var dx_h = box.getGeometry().dx_h;
+  var dy_h = box.getGeometry().dy_h;
+  var dz_h = box.getGeometry().dz_h;
+  debugger;
+  if (Math.abs(relativeCenter.x) - r > dx_h ||
+      Math.abs(relativeCenter.y) - r > dy_h ||
+      Math.abs(relativeCenter.z) - r > dz_h) {
+    return [];
+  }
+  var closestPoint = new Vector3(0, 0, 0);
+  var distance = relativeCenter.x;
+  if (distance > dx_h) {
+    distance = dx_h;
+  } else if (distance < -dx_h) {
+    distance = -dx_h
+  }
+  closestPoint.x = distance;
+
+  distance = relativeCenter.y;
+  if (distance > dy_h) {
+    distance = dy_h;
+  } else if (distance < -dy_h) {
+    distance = -dy_h
+  }
+  closestPoint.y = distance;
+
+  distance = relativeCenter.z;
+  if (distance > dz_h) {
+    distance = dz_h;
+  } else if (distance < -dz_h) {
+    distance = -dz_h
+  }
+  closestPoint.z = distance;
+
+  distance = (closestPoint.sub(relativeCenter)).magnitudeSq();
+  if (distance > r * r) {
+    return [];
+  }
+
+  var closestPointWorld = box.getPointInWorldSpace(closestPoint);
+  var normal = closestPointWorld.sub(sphere.getPosition());
+  normal.normalize();
+  if (flipped) {
+    normal.scaleInPlace(-1);
+  }
+  return [new Collision(
+      closestPointWorld,
+      normal,
+      r - Math.sqrt(distance)
+  )];
 };

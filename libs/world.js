@@ -94,7 +94,10 @@ World.prototype.addBox = function(w, h, d, body) {
     type: "box",
     dx: w,
     dy: h,
-    dz: d
+    dz: d,
+    dx_h: w / 2.0,
+    dy_h: h / 2.0,
+    dz_h: d / 2.0
   });
   // set up inertia
   var m = body.getMass();

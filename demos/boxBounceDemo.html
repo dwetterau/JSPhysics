@@ -31,8 +31,8 @@
         theta += dt / 1000.0;
 
         // render
-        world.runPhysics(dt / 1000.0);
-        //world.runPhysics(.005);
+        dt = dt > 10 ? .01 : dt / 1000.0;
+        world.runPhysics(dt);
         world.render();
 
         // request new frame
