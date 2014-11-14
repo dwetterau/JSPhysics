@@ -3,10 +3,16 @@
 <script type="text/javascript" src="PhysLib.js" ></script>
 <script type="text/javascript" src="Simulator.js" ></script>
 <script type="text/javascript" src="ViewSimulator.js" ></script>
-<script type="text/javascript" src="jquery-1.8.3.min.js"></script>
-<script type="text/javascript" src="jquery.mobile-1.2.0.min.js"></script>
-<link rel="stylesheet" href="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.css" />
-<link rel="stylesheet" type="text/css" href="sim.css">
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquerymobile/1.4.3/jquery.mobile.min.js"></script>
+<script type="text/javascript" defer>
+  $(window).bind("load", function() {
+    sim_viewer();
+  });
+</script>
+
+<link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jquerymobile/1.4.3/jquery.mobile.min.css" />
+<link rel="stylesheet" type="text/css" href="sim.css" />
 </head>
 <body id="body" data-role="page">
 <div id="header">
@@ -45,10 +51,5 @@
 <a id="addBall" data-inline="true" data-role="button" data-icon="plus" >Add Ball</a>
 <a id="removeBall" data-inline="true" data-role="button" data-icon="minus">Delete Ball</a>
 </div>
-<script type="text/javascript">
-$('#body').live('pageinit', function(e) {
-    sim_viewer();
-});
-</script>
 </body>
 </html>
